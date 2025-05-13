@@ -20,7 +20,7 @@ class Simulation(
     private val newGameInfo: GameInfo,
     val simulationsPerThread: Int = 1,
     private val threadsNumber: Int = 1,
-    private val maxTurns: Int = 500,
+    private val maxTurns: Int = 501,
     private val statTurns: List<Int> = listOf()
 ) {
     private val maxSimulations = threadsNumber * simulationsPerThread
