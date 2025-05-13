@@ -546,7 +546,7 @@
         "name": "Autocracy",
         "era": "Industrial era",
         "priorities": {
-            "Neutral": 5,
+            "Neutral": 10,
             "Cultural": 5,
             "Diplomatic": 5,
             "Domination": 10,
@@ -615,7 +615,7 @@
         "name": "Order",
         "era": "Industrial era",
         "priorities": {
-            "Neutral": 10,
+            "Neutral": 5,
             "Cultural": 5,
             "Diplomatic": 10,
             "Domination": 5,

@@ -1,5 +1,6 @@
 ﻿package com.unciv.logic.automation.unit
 
+import com.unciv.Constants
 import com.unciv.logic.automation.Automation
 import com.unciv.logic.automation.unit.CivilianUnitAutomation.tryRunAwayIfNeccessary
 import com.unciv.logic.battle.GreatGeneralImplementation
@@ -29,6 +30,10 @@ object SpecificUnitAutomation {
     }
 
     fun automateCitadelPlacer(unit: MapUnit): Boolean {
+
+        return false
+        
+        /*
         // Keep at least 2 generals alive
         if (unit.hasUnique(UniqueType.StrengthBonusInRadius) 
                 && unit.civ.units.getCivUnits().count { it.hasUnique(UniqueType.StrengthBonusInRadius) } < 3) 
@@ -68,7 +73,7 @@ object SpecificUnitAutomation {
             UnitActionsFromUniques.getImprovementConstructionActionsFromGeneralUnique(unit, unit.currentTile).firstOrNull()?.action?.invoke()
             return true
         }
-        return false
+        return false*/
     }
 
     fun automateGreatGeneralFallback(unit: MapUnit) {
