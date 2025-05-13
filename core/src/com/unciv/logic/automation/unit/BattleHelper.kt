@@ -1,5 +1,6 @@
 package com.unciv.logic.automation.unit
 
+import com.unciv.Constants
 import com.unciv.logic.battle.AttackableTile
 import com.unciv.logic.battle.Battle
 import com.unciv.logic.battle.BattleDamage
@@ -30,6 +31,19 @@ object BattleHelper {
                     // Also, AI doesn't build tactical roads
             }
 
+        attackableEnemies.filter {  //don't even consider tile where we might die
+            (BattleDamage.calculateDamageToDefender(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) >= Battle.getMapCombatantOfTile(it.tileToAttack)!!.getHealth()) ||
+            it.tileToAttackFrom.getTilesAtDistance(1).count { it.militaryUnit != null && it.militaryUnit!!.civ.isAtWarWith(unit.civ) } <
+                it.tileToAttack.getTilesAtDistance(1).count { it.militaryUnit != null && it.militaryUnit!!.civ == unit.civ } + 2
+        }
+        
+        if (unit.baseUnit.isMelee()) {
+            attackableEnemies.filter {
+                BattleDamage.calculateDamageToDefender(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) >= Battle.getMapCombatantOfTile(it.tileToAttack)!!.getHealth()
+                    || BattleDamage.calculateDamageToAttacker(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) <= BattleDamage.calculateDamageToDefender(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!)
+            }
+        }
+        
         val enemyTileToAttack = chooseAttackTarget(unit, attackableEnemies)
 
         if (enemyTileToAttack != null) {
@@ -127,15 +141,28 @@ object BattleHelper {
         attackValue -= (city.health - 60) / 2
 
         // Add value based on number of units around the city
-        val defendingCityCiv = city.civ
+        // Yes, this should be simplified into something less arbitrary, but in a way that gains playing strength
+        
         city.getCenterTile().getTilesInDistance(2).forEach {
             if (it.militaryUnit != null) {
                 if (it.militaryUnit!!.civ.isAtWarWith(attacker.civ))
                     attackValue -= 5
-                if (it.militaryUnit!!.civ.isAtWarWith(defendingCityCiv))
-                    attackValue += 15
             }
         }
+        city.getCenterTile().getTilesInDistance(3).forEach {
+            if (it.militaryUnit != null) {
+                if (it.militaryUnit!!.civ.isAtWarWith(attacker.civ))
+                    attackValue += 10
+            }
+        }
+        city.getCenterTile().getTilesInDistance(1).forEach {
+                if (it.militaryUnit != null) {
+                    if (it.militaryUnit!!.civ.isAtWarWith(city.civ))
+                        attackValue += 10 
+                }
+        }
+        attackValue -= 20
+        
 
         return attackValue
     }
@@ -176,6 +203,8 @@ object BattleHelper {
         // Moving around less means we are straying less into enemy territory
         // Average should be around 2.5-5 early game and up to 35 for tanks in late game
         attackValue += (attackTile.movementLeftAfterMovingToAttackTile * 5).toInt()
+        attackValue -= attackTile.tileToAttack.getTilesInDistance(1).count { it.militaryUnit?.civ != attacker.civ  } * 2
+            
 
         return attackValue
     }

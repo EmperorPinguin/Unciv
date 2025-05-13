@@ -182,9 +182,12 @@ object UnitAutomation {
         while (unit.promotions.canBePromoted() &&
             // Restrict Human automated units from promotions via setting
                 (UncivGame.Current.settings.automatedUnitsChoosePromotions || unit.civ.isAI())) {
-            val availablePromotions = unit.promotions.getAvailablePromotions()
-                // It can be assumed that "heal + skip promotion" is a bad choice - the cases where we WOULD want it are slim
-                .filterNot { it.hasUnique(UniqueType.SkipPromotion) }
+            val promotions = unit.promotions.getAvailablePromotions()
+            val availablePromotions = if (unit.health <= 50
+                && promotions.any {it.hasUnique(UniqueType.OneTimeUnitHeal)}
+                && !(unit.baseUnit.isAirUnit() || unit.hasUnique(UniqueType.CanMoveAfterAttacking))) {
+                promotions.filter { it.hasUnique(UniqueType.OneTimeUnitHeal) }
+            } else promotions.filterNot { it.hasUnique(UniqueType.SkipPromotion) }
             
             
             if (availablePromotions.none()) break
@@ -222,6 +225,11 @@ object UnitAutomation {
 
             return AirUnitAutomation.automateBomber(unit)
         }
+        val lowHealthCities = unit.civ.getKnownCivs() // This is a Sequence
+            .flatMap { it.cities.asSequence() }
+            .any { unit.civ.isAtWarWith(it.civ) && it.health < it.getMaxHealth() }
+        val bigArmy = unit.civ.units.getCivUnits().count { it.isMilitary() } > 30
+        val biggerArmy = unit.civ.units.getCivUnits().count { it.isMilitary() } > 25 || lowHealthCities
 
         // Accompany settlers
         if (tryAccompanySettlerOrGreatPerson(unit)) return
@@ -230,30 +238,33 @@ object UnitAutomation {
 
         if (unit.health < 50 && (tryRetreat(unit) || tryHealUnit(unit))) return // do nothing but heal
 
-        // If there are no enemies nearby and we can heal here, wait until we are at full health
-        if (unit.health < 100 && canUnitHealInTurnsOnCurrentTile(unit,2, 4)) return
-
-        if (tryHeadTowardsOurSiegedCity(unit)) return
-
         // if a embarked melee unit can land and attack next turn, do not attack from water.
         if (BattleHelper.tryDisembarkUnitToAttackPosition(unit)) return
 
+        // If there are no enemies nearby and we can heal here, wait until we are at full health
+        if (unit.health < 100 && canUnitHealInTurnsOnCurrentTile(unit,2, 4)) return
+        
+        if (tryAttacking(unit)) return
+        
+        if (tryHeadTowardsOurSiegedCity(unit)) return // If army dies, then city dies. Hence try to kill units before saving cities
+        
         // if there is an attackable unit in the vicinity, attack!
+    
         if (tryAttacking(unit)) return
 
         if (tryTakeBackCapturedCity(unit)) return
 
-        // Focus all units without a specific target on the enemy city closest to one of our cities
-        if (HeadTowardsEnemyCityAutomation.tryHeadTowardsEnemyCity(unit)) return
+        if (tryAdvanceTowardsCloseEnemy(unit)) return // move towards the closest reasonably attackable enemy unit within 3 turns of movement (and 5 tiles range)
+        
+        if (biggerArmy) {
+            if (HeadTowardsEnemyCityAutomation.tryHeadTowardsEnemyCity(unit)) return // Focus all units without a specific target on the enemy city closest to one of our cities
+        }
 
         if (tryGarrisoningRangedLandUnit(unit)) return
 
         if (tryStationingMeleeNavalUnit(unit)) return
 
         if (unit.health < 80 && tryHealUnit(unit)) return
-
-        // move towards the closest reasonably attackable enemy unit within 3 turns of movement (and 5 tiles range)
-        if (tryAdvanceTowardsCloseEnemy(unit)) return
 
         if (tryHeadTowardsEncampment(unit)) return
 
@@ -263,8 +274,10 @@ object UnitAutomation {
 
         // else, try to go to unreached tiles
         if (tryExplore(unit)) return
-
-        if (tryFogBust(unit)) return
+        
+        if (bigArmy) {
+            if (tryFogBust(unit)) return
+        }
 
         // Idle CS units should wander so they don't obstruct players so much
         if (unit.civ.isCityState)
@@ -449,7 +462,7 @@ object UnitAutomation {
     /**
      * @return true if the unit was able to pillage a tile, false otherwise
      */
-    fun tryPillageImprovement(unit: MapUnit, onlyPillageToHeal: Boolean = false): Boolean {
+    fun tryPillageImprovement(unit: MapUnit, onlyPillageToHeal: Boolean = false, stayOnTile: Boolean = false): Boolean {
         if (unit.isCivilian()) return false
         val unitDistanceToTiles = unit.movement.getDistanceToTiles()
         val tilesThatCanWalkToAndThenPillage = unitDistanceToTiles
@@ -457,6 +470,7 @@ object UnitAutomation {
             .filter { unit.movement.canMoveTo(it) && UnitActionsPillage.canPillage(unit, it)
                     && (it.canPillageTileImprovement()
                     || (!onlyPillageToHeal && it.canPillageRoad() && it.getRoadOwner() != null && unit.civ.isAtWarWith(it.getRoadOwner()!!))) }
+            .filterNot { stayOnTile && it != unit.getTile()}
 
         if (tilesThatCanWalkToAndThenPillage.isEmpty()) return false
         val tileToPillage = tilesThatCanWalkToAndThenPillage.maxByOrNull { it.getDefensiveBonus(false, unit) }!!
@@ -492,6 +506,8 @@ object UnitAutomation {
                 Battle.getMapCombatantOfTile(it.tileToAttack)!!
             ) < unit.health || unit.getDamageFromTerrain(it.tileToAttackFrom) > 0
         }
+        .filterNot { it -> it.tileToAttack.getTilesInDistance(3).none {it.isCityCenter() && it.getOwner() == unit.civ }}
+        
 
         if (unit.baseUnit.isRanged())
             closeEnemies = closeEnemies.filterNot { it.tileToAttack.isCityCenter() && it.tileToAttack.getCity()!!.health == 1 }
