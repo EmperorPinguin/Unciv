@@ -52,15 +52,15 @@ class MapParameters : IsPartOfGameInfoSerialization {
     var type = MapType.pangaea
     // DO NOT CHANGE DEFAULTS since that changes all existing games to new default!
     var shape = MapShape.hexagonal
-    var mapSize = MapSize.Medium
+    var mapSize = MapSize.Tiny
     var mapResources = MapResourceSetting.default.label
-    var mirroring: String = MirroringType.none
+    var mirroring: String = MirroringType.aroundCenterTile
     var noRuins = false
     var noNaturalWonders = false
     // DO NOT CHANGE DEFAULTS since that changes all existing games to new default!
     var worldWrap = false
-    var strategicBalance = false
-    var legendaryStart = false
+    var strategicBalance = true
+    var legendaryStart = true
 
     /** This is used mainly for the map editor, so you can continue editing a map under the same ruleset you started with */
     var mods = LinkedHashSet<String>()
@@ -77,7 +77,7 @@ class MapParameters : IsPartOfGameInfoSerialization {
     var vegetationRichness = 0.4f
     var rareFeaturesRichness = 0.05f
     var resourceRichness = 0.1f
-    var waterThreshold = 0.0f
+    var waterThreshold = -0.1f
 
     /** Shifts temperature (after random, latitude and temperatureintensity).*/
     var temperatureShift = 0f

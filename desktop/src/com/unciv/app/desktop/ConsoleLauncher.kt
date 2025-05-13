@@ -58,7 +58,7 @@ internal object ConsoleLauncher {
         UncivGame.Current.gameInfo = newGame
 
 
-        val simulation = Simulation(newGame, 50, 8)
+        val simulation = Simulation(newGame, 250, 8)
         //Unless the effect size is very large, you'll typically need a large number of games to get a statistically significant result
 
         simulation.start()
@@ -66,16 +66,19 @@ internal object ConsoleLauncher {
 
     private fun getMapParameters(): MapParameters {
         return MapParameters().apply {
-            mapSize = MapSize.Small
+            mapSize = MapSize.Tiny
+            legendaryStart = true
+            strategicBalance = true
             noRuins = true
             noNaturalWonders = true
             mirroring = MirroringType.aroundCenterTile
+            waterThreshold = -0.1f //reduced water level helps avoid mirrored pangea splitting into 2 continents
         }
     }
 
     private fun getGameParameters(vararg civilizations: String): GameParameters {
         return GameParameters().apply {
-            difficulty = "Prince"
+            difficulty = "King"
             numberOfCityStates = 0
             speed = Speed.DEFAULT
             noBarbarians = true

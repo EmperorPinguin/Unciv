@@ -1,5 +1,6 @@
 package com.unciv.logic.automation
 
+import com.unciv.Constants
 import com.unciv.logic.city.City
 import com.unciv.logic.city.CityFocus
 import com.unciv.logic.city.CityStats
@@ -226,20 +227,21 @@ object Automation {
             // in the future this could be simplified by assigning every distinct non-lake body of
             // water their own ID like a continent ID
             val findWaterConnectedCitiesAndEnemies =
-                    BFS(city.getCenterTile()) { it.isWater && !it.isImpassible() || it.isCityCenter() }
+                BFS(city.getCenterTile()) { it.isWater && !it.isImpassible() || it.isCityCenter() }
             findWaterConnectedCitiesAndEnemies.stepToEnd()
 
             val numberOfOurConnectedCities = findWaterConnectedCitiesAndEnemies.getReachedTiles()
                 .count { it.isCityCenter() && it.getOwner() == city.civ }
             val numberOfOurNavalMeleeUnits = findWaterConnectedCitiesAndEnemies.getReachedTiles()
                 .sumOf { it.getUnits().count { isNavalMeleeUnit(it.baseUnit) } }
-                
-            isMissingNavalUnitsForCityDefence = numberOfOurConnectedCities > numberOfOurNavalMeleeUnits
+
+            isMissingNavalUnitsForCityDefence =
+                numberOfOurConnectedCities > numberOfOurNavalMeleeUnits
 
             removeShips = findWaterConnectedCitiesAndEnemies.getReachedTiles().none {
-                        (it.isCityCenter() && it.getOwner() != city.civ)
-                                || (it.militaryUnit != null && it.militaryUnit!!.civ != city.civ)
-                    } // there is absolutely no reason for you to make water units on this body of water.
+                (it.isCityCenter() && it.getOwner() != city.civ)
+                    || (it.militaryUnit != null && it.militaryUnit!!.civ != city.civ)
+            } // there is absolutely no reason for you to make water units on this body of water.
         }
 
         val militaryUnits = availableUnits
@@ -249,27 +251,43 @@ object Automation {
             .filterNot {
                 // filter out carrier-type units that can't attack if we don't need them
                 it.hasUnique(UniqueType.CarryAirUnits)
-                        && providesUnneededCarryingSlots(it, city.civ)
+                    && providesUnneededCarryingSlots(it, city.civ)
             }
             // Only now do we filter out the constructable units because that's a heavier check
             .filter { it.isBuildable(city.cityConstructions) }
             .toList().asSequence()
 
+        val numberOfRanged = city.civ.units.getCivUnits().count { it.baseUnit.isRanged() }
+        val numberOfMelee = city.civ.units.getCivUnits().count { it.baseUnit.isMelee() }
+
         val chosenUnit: BaseUnit
+
         if (!city.civ.isAtWar()
-                && city.civ.cities.any { it.getCenterTile().militaryUnit == null }
-                && militaryUnits.any { it.isRanged() } // this is for city defence so get a ranged unit if we can
+            && city.civ.cities.any { it.getCenterTile().militaryUnit == null }
+            && militaryUnits.any { it.isRanged() } // this is for city defence so get a ranged unit if we can
         ) {
             chosenUnit = militaryUnits
                 .filter { it.isRanged() }
                 .maxByOrNull { it.cost }!!
-        }
-        else if (isMissingNavalUnitsForCityDefence && militaryUnits.any { isNavalMeleeUnit(it) }) {
+        } else if (isMissingNavalUnitsForCityDefence && militaryUnits.any { isNavalMeleeUnit(it) }) {
             chosenUnit = militaryUnits
                 .filter { isNavalMeleeUnit(it) }
                 .maxBy { it.cost }
+        } else {
+        chosenUnit = if (numberOfRanged < numberOfMelee * 1.5f && militaryUnits.any { it.isRanged() }) {
+            militaryUnits
+                .filter { it.isRanged() }
+                .maxBy { it.range * it.rangedStrength }
+        } else {
+            militaryUnits
+                .filter { it.isMelee() }
+                .maxBy { it.strength * it.movement }
         }
-        else { // randomize type of unit and take the most expensive of its kind
+    }
+
+
+
+    /*else { // randomize type of unit and take the most expensive of its kind
             val bestUnitsForType = hashMapOf<String, BaseUnit>()
             for (unit in militaryUnits) {
                 if (bestUnitsForType[unit.unitType] == null || bestUnitsForType[unit.unitType]!!.cost < unit.cost) {
@@ -279,7 +297,7 @@ object Automation {
             // Check the maximum force evaluation for the shortlist so we can prune useless ones (ie scouts)
             val bestForce = bestUnitsForType.maxOfOrNull { it.value.getForceEvaluation() } ?: return null
             chosenUnit = bestUnitsForType.filterValues { it.uniqueTo != null || it.getForceEvaluation() > bestForce / 3 }.values.random()
-        }
+        }*/
         return chosenUnit.name
     }
 
