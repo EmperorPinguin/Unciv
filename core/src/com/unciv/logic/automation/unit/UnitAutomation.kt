@@ -443,7 +443,7 @@ object UnitAutomation {
     }
 
     private fun getDangerousTiles(unit: MapUnit): HashSet<Tile> {
-        val nearbyEnemyUnits = unit.currentTile.getTilesInDistance(3)
+        val nearbyEnemyUnits = unit.currentTile.getTilesInDistance(2)
             .flatMap { tile -> tile.getUnits().filter { unit.civ.isAtWarWith(it.civ) } }
 
         val tilesInRangeOfAttack = nearbyEnemyUnits
