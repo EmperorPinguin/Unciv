@@ -162,10 +162,8 @@ object BattleHelper {
                 }
         }
         attackValue -= 20
-        
-
-        return attackValue
-    }
+        if (city.isInResistance()) attackValue -= 20
+        return attackValue        }
 
     /**
      * Returns a value which represents the attacker's motivation to attack a unit.
