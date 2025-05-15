@@ -145,24 +145,13 @@ object BattleHelper {
         
         city.getCenterTile().getTilesInDistance(2).forEach {
             if (it.militaryUnit != null) {
-                if (it.militaryUnit!!.civ.isAtWarWith(attacker.civ))
-                    attackValue -= 5
+                if (it.militaryUnit!!.civ.isAtWarWith(city.civ))
+                    attackValue += 5
             }
         }
-        city.getCenterTile().getTilesInDistance(3).forEach {
-            if (it.militaryUnit != null) {
-                if (it.militaryUnit!!.civ.isAtWarWith(attacker.civ))
-                    attackValue += 10
-            }
-        }
-        city.getCenterTile().getTilesInDistance(1).forEach {
-                if (it.militaryUnit != null) {
-                    if (it.militaryUnit!!.civ.isAtWarWith(city.civ))
-                        attackValue += 10 
-                }
-        }
-        attackValue -= 20
-        if (city.isInResistance()) attackValue -= 20
+        if (city.isInResistance()) attackValue -= 40 else 20
+       
+       
         return attackValue        }
 
     /**
