@@ -247,14 +247,14 @@ object UnitAutomation {
         if (tryAttacking(unit)) return
         
         if (tryHeadTowardsOurSiegedCity(unit)) return // If army dies, then city dies. Hence try to kill units before saving cities
+
+        if (tryAdvanceTowardsCloseEnemy(unit)) return // move towards the closest reasonably attackable enemy unit within 3 turns of movement (and 5 tiles range)
         
         // if there is an attackable unit in the vicinity, attack!
     
         if (tryAttacking(unit)) return
 
         if (tryTakeBackCapturedCity(unit)) return
-
-        if (tryAdvanceTowardsCloseEnemy(unit)) return // move towards the closest reasonably attackable enemy unit within 3 turns of movement (and 5 tiles range)
         
         if (biggerArmy) {
             if (HeadTowardsEnemyCityAutomation.tryHeadTowardsEnemyCity(unit)) return // Focus all units without a specific target on the enemy city closest to one of our cities
