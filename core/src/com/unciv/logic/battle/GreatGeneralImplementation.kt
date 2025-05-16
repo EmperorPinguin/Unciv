@@ -76,7 +76,7 @@ object GreatGeneralImplementation {
         // Get candidate units to 'follow', coarsely.
         // The mapUnitFilter of the unique won't apply here but in the ranking of the "Aura" effectiveness.
         val unitMaxMovement = general.getMaxMovement()
-        val militaryUnitTilesInDistance = general.movement.getDistanceToTiles().asSequence()
+        var militaryUnitTilesInDistance = general.movement.getDistanceToTiles().asSequence()
             .map { it.key }
             .filter { tile ->
                 val militaryUnit = tile.militaryUnit
@@ -91,6 +91,10 @@ object GreatGeneralImplementation {
             ?: return null
         
         val militaryUnitToHasAttackableEnemies = HashMap<MapUnit, Boolean>()
+        
+        militaryUnitTilesInDistance = militaryUnitTilesInDistance.filterNot { unitTile ->
+                unitTile.getTilesInDistance(1).any { it.militaryUnit != null && it.militaryUnit!!.civ != general.civ }
+        }
 
         return militaryUnitTilesInDistance
             .maxByOrNull { unitTile ->
