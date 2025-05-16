@@ -242,7 +242,7 @@ object UnitAutomation {
         if (BattleHelper.tryDisembarkUnitToAttackPosition(unit)) return
 
         // If there are no enemies nearby and we can heal here, wait until we are at full health
-        if (unit.health < 100 && canUnitHealInTurnsOnCurrentTile(unit,2, 4)) return
+        if (unit.health < 100 && canUnitHealInTurnsOnCurrentTile(unit,2, 3)) return
         
         if (tryAttacking(unit)) return
         
@@ -314,7 +314,7 @@ object UnitAutomation {
         if (unit.isCivilian()) return false
         if (unit.baseUnit.isAirUnit()) return false
         // Better to do a more healing oriented move then
-        if (unit.civ.threatManager.getDistanceToClosestEnemyUnit(unit.getTile(),6, true) > 4) return false
+        if (unit.civ.threatManager.getDistanceToClosestEnemyUnit(unit.getTile(),6, true) > 3) return false
 
 
         val unitDistanceToTiles = unit.movement.getDistanceToTiles()
@@ -383,7 +383,7 @@ object UnitAutomation {
 
         val currentUnitTile = unit.getTile()
 
-        val dangerousTiles = unit.civ.threatManager.getDangerousTiles(unit, 4)
+        val dangerousTiles = unit.civ.threatManager.getDangerousTiles(unit, 3)
 
         val viableTilesForHealing = unitDistanceToTiles.keys
                 .filter { it !in dangerousTiles && unit.movement.canMoveTo(it) }
