@@ -101,9 +101,6 @@ object GreatGeneralImplementation {
                 unitTile.getTilesInDistance(unitBonusRadius).sumOf { affectedTile ->
                     val militaryUnit = affectedTile.militaryUnit
                     if (militaryUnit == null || militaryUnit.civ != general.civ || militaryUnit.isEmbarked()) 0
-                    else if (militaryUnitToHasAttackableEnemies.getOrPut(militaryUnit) {
-                            TargetHelper.getAttackableEnemies(militaryUnit, militaryUnit.movement.getDistanceToTiles()).isEmpty()
-                        }) 0
                     else generalBonusData.firstOrNull {
                         // "Military" as commented above only a small optimization
                         affectedTile.aerialDistanceTo(unitTile) <= it.radius
