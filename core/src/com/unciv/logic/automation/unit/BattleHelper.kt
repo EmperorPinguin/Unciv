@@ -191,6 +191,7 @@ object BattleHelper {
         // Average should be around 2.5-5 early game and up to 35 for tanks in late game
         attackValue += (attackTile.movementLeftAfterMovingToAttackTile * 5).toInt()
         attackValue -= attackTile.tileToAttack.getTilesInDistance(1).count { it.militaryUnit?.civ != attacker.civ  } * 2
+        attackValue += if (attackTile.tileToAttackFrom.getTilesInDistance(2).any{ it.civilianUnit != null && it.civilianUnit!!.civ == attacker.civ && it.civilianUnit!!.hasUnique(UniqueType.StrengthBonusInRadius)}) -1 else 1
             
 
         return attackValue
