@@ -192,6 +192,8 @@ object BattleHelper {
         attackValue += (attackTile.movementLeftAfterMovingToAttackTile * 5).toInt()
         attackValue -= attackTile.tileToAttack.getTilesInDistance(1).count { it.militaryUnit?.civ != attacker.civ  } * 2
         attackValue += if (attackTile.tileToAttackFrom.getTilesInDistance(2).any{ it.civilianUnit != null && it.civilianUnit!!.civ == attacker.civ && it.civilianUnit!!.hasUnique(UniqueType.StrengthBonusInRadius)}) -1 else 1
+        val points = if (attacker.hasUnique(UniqueType.NoDefensiveTerrainBonus)) 0 else (attackTile.tileToAttackFrom.getDefensiveBonus(true)*20).toInt() - 1
+        attackValue += points
             
 
         return attackValue
