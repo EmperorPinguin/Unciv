@@ -29,7 +29,9 @@ object Automation {
 
     fun rankTileForCityWork(tile: Tile, city: City, localUniqueCache: LocalUniqueCache): Float {
         val stats = tile.stats.getTileStats(city, city.civ, localUniqueCache)
-        return rankStatsForCityWork(stats, city, false, localUniqueCache)
+        //Apply a tiebreak-bonus depending on the position of the tile, aiming to get better citizen assignment without doing empire-wide combinatorials
+        val tileBonus = (2-tile.aerialDistanceTo(city.getCenterTile()).toFloat())/10 //lower priority for further tiles
+        return rankStatsForCityWork(stats, city, false, localUniqueCache) + tileBonus
     }
 
     fun rankSpecialist(specialist: String, city: City, localUniqueCache: LocalUniqueCache): Float {
