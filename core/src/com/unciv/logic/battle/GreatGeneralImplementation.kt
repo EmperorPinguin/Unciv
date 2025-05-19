@@ -66,47 +66,23 @@ object GreatGeneralImplementation {
     fun getBestAffectedTroopsTile(general: MapUnit): Tile? {
         // Normally we have only one Unique here. But a mix is not forbidden, so let's try to support mad modders.
         // (imagine several GreatGeneralAura uniques - +50% at radius 1, +25% at radius 2, +5% at radius 3 - possibly learnable from promotions via buildings or natural wonders?)
+        
+        // Or not? 
+        // A general with radius 1 is hard to position such that it grants effect to units but does not die itself; should we only use to to grant support for back-rank ranged units?
+        // A general with 3 or more radius affects a lot, and as such can be placed anywhere as long as it's not directly at the fronline
 
-        // Map out the uniques sorted by bonus, as later only the best bonus will apply.
-        val generalBonusData = (
-                general.getMatchingUniques(UniqueType.StrengthBonusInRadius).map { GeneralBonusData(general, it) }
-            ).sortedWith(compareByDescending<GeneralBonusData> { it.bonus }.thenBy { it.radius })
-            .toList()
-
-        // Get candidate units to 'follow', coarsely.
-        // The mapUnitFilter of the unique won't apply here but in the ranking of the "Aura" effectiveness.
-        val unitMaxMovement = general.getMaxMovement()
-        var militaryUnitTilesInDistance = general.movement.getDistanceToTiles().asSequence()
+        val militaryUnitTilesInDistance = general.movement.getDistanceToTiles().asSequence()
             .map { it.key }
             .filter { tile ->
                 val militaryUnit = tile.militaryUnit
                 militaryUnit != null && militaryUnit.civ == general.civ
-                        && (tile.civilianUnit == null || tile.civilianUnit == general)
-                        && militaryUnit.getMaxMovement() <= unitMaxMovement
-                        && !tile.isCityCenter()
+                    && (tile.civilianUnit == null || tile.civilianUnit == general)
             }
-
-        // rank tiles and find best
-        val unitBonusRadius = generalBonusData.maxOfOrNull { it.radius }
-            ?: return null
-        
-        val militaryUnitToHasAttackableEnemies = HashMap<MapUnit, Boolean>()
-        
-        militaryUnitTilesInDistance = militaryUnitTilesInDistance.filterNot { unitTile ->
-                unitTile.getTilesInDistance(1).any { it.militaryUnit != null && it.militaryUnit!!.civ != general.civ }
-        }
 
         return militaryUnitTilesInDistance
             .maxByOrNull { unitTile ->
-                unitTile.getTilesInDistance(unitBonusRadius).sumOf { affectedTile ->
-                    val militaryUnit = affectedTile.militaryUnit
-                    if (militaryUnit == null || militaryUnit.civ != general.civ || militaryUnit.isEmbarked()) 0
-                    else generalBonusData.firstOrNull {
-                        // "Military" as commented above only a small optimization
-                        affectedTile.aerialDistanceTo(unitTile) <= it.radius
-                                && (it.filter == "Military" || militaryUnit.matchesFilter(it.filter))
-                    }?.bonus ?: 0
-                }
+                (2 * unitTile.getTilesInDistance(2).count { it.militaryUnit?.civ == general.civ }
+                    + unitTile.getTilesAtDistance(3).count { it.militaryUnit?.civ != general.civ })
             }
     }
 }
