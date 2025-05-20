@@ -347,6 +347,8 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         if (surplusFood < 0) {
             buildingStats.food *= 8 // Starving, need Food, get to 0
         } else buildingStats.food *= 3
+        
+        buildingStats.production * 2
 
         if (civInfo.stats.statsForNextTurn.gold < 10) {
             buildingStats.gold *= 2 // We have a gold problem and need to adjust build queue accordingly
