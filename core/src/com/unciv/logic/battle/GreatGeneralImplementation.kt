@@ -83,8 +83,9 @@ object GreatGeneralImplementation {
             .maxByOrNull { unitTile ->
                 (2 * unitTile.getTilesInDistance(2).count { it.militaryUnit?.civ == general.civ }
                     + unitTile.getTilesAtDistance(3).count { it.militaryUnit?.civ != general.civ }
-                    - 2*unitTile.getTilesAtDistance(1).count { it.militaryUnit?.civ != general.civ }
-                    + unitTile.getTilesAtDistance(4).count { it.militaryUnit?.civ != general.civ })
+                    - 2 * unitTile.getTilesAtDistance(1).count { it.militaryUnit?.civ != general.civ }
+                    + unitTile.getTilesAtDistance(4).count { it.militaryUnit?.civ != general.civ }
+                    - 5 * unitTile.getTilesInDistance(1).count { it.civilianUnit?.civ == general.civ && it.civilianUnit!!.hasUnique(UniqueType.StrengthBonusInRadius)} )
             }
     }
 }
