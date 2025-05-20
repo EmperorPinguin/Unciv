@@ -68,8 +68,8 @@ object GreatGeneralImplementation {
         // (imagine several GreatGeneralAura uniques - +50% at radius 1, +25% at radius 2, +5% at radius 3 - possibly learnable from promotions via buildings or natural wonders?)
         
         // Or not? 
-        // A general with radius 1 is hard to position such that it grants effect to units but does not die itself; should we only use to to grant support for back-rank ranged units?
-        // A general with 3 or more radius affects a lot, and as such can be placed anywhere as long as it's not directly at the fronline
+        // A general with radius 1 is hard to position such that it grants effect to units but does not die itself; should we only use it to grant support for back-rank ranged units?
+        // A general with 3 or more radius affects a lot, and as such can be placed anywhere as long as it's not directly at the frontline
 
         val militaryUnitTilesInDistance = general.movement.getDistanceToTiles().asSequence()
             .map { it.key }
