@@ -347,10 +347,10 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         if (surplusFood < 0) {
             buildingStats.food *= 8 // Starving, need Food, get to 0
         } else buildingStats.food *= 3
-        
-        buildingStats.production * 2
-        
-        buildingStats.science * 2
+
+        buildingStats.production *= 3
+
+        buildingStats.science *= 2
 
         buildingStats.happiness *= 2
 
@@ -359,7 +359,7 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         }
 
         if (civInfo.getHappiness() < 10 || civInfo.getHappiness() < civInfo.cities.size)
-            buildingStats.happiness * 5
+            buildingStats.happiness *= 5
 
         if (city.cityStats.currentCityStats.culture < 2) {
             buildingStats.culture *= 2 // We need to start growing borders
