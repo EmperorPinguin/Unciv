@@ -403,6 +403,7 @@ object NextTurnAutomation {
         val distance = if (!isAtWar) 0 else unit.civ.threatManager.getDistanceToClosestEnemyUnit(unit.getTile(),6)
         // Lower health units should move earlier to swap with higher health units
         return distance - unit.getTile().getTilesInDistance(1).count { it.militaryUnit?.civ == unit.civ } * 2 + (unit.health / 10) + when {
+            unit.hasUnique(UniqueType.CanMoveAfterAttacking) -> 9
             unit.baseUnit.isRanged() -> 10
             unit.baseUnit.isMelee() -> 30
             unit.isGreatPersonOfType("War") -> 100 // Generals move after military units

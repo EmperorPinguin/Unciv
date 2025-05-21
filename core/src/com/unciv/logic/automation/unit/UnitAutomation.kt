@@ -245,6 +245,8 @@ object UnitAutomation {
         if (unit.health < 100 && canUnitHealInTurnsOnCurrentTile(unit,2, 3)) return
         
         if (tryAttacking(unit)) return
+
+        if (unit.hasUnique(UniqueType.CanMoveAfterAttacking) && unit.getTile().getTilesInDistance(1).any { it.militaryUnit?.civ != unit.civ } && tryRetreat(unit)) return
         
         if (tryHeadTowardsOurSiegedCity(unit)) return // If army dies, then city dies. Hence try to kill units before saving cities
 
