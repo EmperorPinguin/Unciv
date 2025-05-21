@@ -350,16 +350,11 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
 
         buildingStats.production *= 3
 
-        buildingStats.science *= 2
-
         buildingStats.happiness *= 2
 
         if (civInfo.stats.statsForNextTurn.gold < 10) {
             buildingStats.gold *= 2 // We have a gold problem and need to adjust build queue accordingly
         }
-
-        if (civInfo.getHappiness() < 10 || civInfo.getHappiness() < civInfo.cities.size)
-            buildingStats.happiness *= 5
 
         if (city.cityStats.currentCityStats.culture < 2) {
             buildingStats.culture *= 2 // We need to start growing borders
