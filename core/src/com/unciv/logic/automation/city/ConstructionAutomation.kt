@@ -352,6 +352,8 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         
         buildingStats.science * 2
 
+        buildingStats.happiness *= 2
+
         if (civInfo.stats.statsForNextTurn.gold < 10) {
             buildingStats.gold *= 2 // We have a gold problem and need to adjust build queue accordingly
         }
