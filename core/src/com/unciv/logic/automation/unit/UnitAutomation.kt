@@ -348,7 +348,7 @@ object UnitAutomation {
                 if (otherUnit.baseUnit.isRanged()) {
                     // Don't swap ranged units closer than they have to be
                     val range = otherUnit.baseUnit.range
-                    if (ourDistanceToClosestEnemy < range)
+                    if (ourDistanceToClosestEnemy < range - 1)
                         continue
                 }
                 if (unit.movement.canUnitSwapTo(retreatTile)) {
