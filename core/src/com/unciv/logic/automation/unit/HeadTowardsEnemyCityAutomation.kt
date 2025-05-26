@@ -1,5 +1,6 @@
 package com.unciv.logic.automation.unit
 
+import com.unciv.Constants
 import com.unciv.logic.automation.civilization.NextTurnAutomation
 import com.unciv.logic.battle.BattleDamage
 import com.unciv.logic.battle.CityCombatant
@@ -33,7 +34,7 @@ object HeadTowardsEnemyCityAutomation {
             .filter { unit.civ.isAtWarWith(it) && it.cities.isNotEmpty() }
 
         val closestEnemyCity = enemies
-            .mapNotNull { NextTurnAutomation.getClosestCities(unit.civ, it) }
+            .mapNotNull { NextTurnAutomation.getAverageClosestCities(unit.civ, it) }
             .minByOrNull { it.aerialDistance }?.city2
             ?: return emptySequence() // no attackable cities found
 

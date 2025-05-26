@@ -562,4 +562,31 @@ object NextTurnAutomation {
 
         return minDistance
     }
+
+    fun getAverageClosestCities(civ1: Civilization, civ2: Civilization): CityDistance? {
+        if (civ1.cities.isEmpty() || civ2.cities.isEmpty())
+            return null
+
+        // Compute the civ1 city with the lowest average distance to all civ2 cities
+        val civ1BestCity = civ1.cities.minByOrNull { civ1city ->
+            civ2.cities.map { civ2city ->
+                civ1city.getCenterTile().aerialDistanceTo(civ2city.getCenterTile())
+            }.average()
+        }
+
+        // Compute the civ2 city with the lowest average distance to all civ1 cities
+        val civ2BestCity = civ2.cities.minByOrNull { civ2city ->
+            civ1.cities.map { civ1city ->
+                civ2city.getCenterTile().aerialDistanceTo(civ1city.getCenterTile())
+            }.average()
+        }
+
+        // Return the pair with the average distance between these two best cities
+        return if (civ1BestCity != null && civ2BestCity != null) {
+            val distance = civ1BestCity.getCenterTile().aerialDistanceTo(civ2BestCity.getCenterTile())
+            CityDistance(civ1BestCity, civ2BestCity, distance)
+        } else {
+            null
+        }
+    }
 }
