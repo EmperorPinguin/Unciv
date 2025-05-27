@@ -217,7 +217,7 @@ class WorkerAutomation(
             && (currentTile.isPillaged() || currentTile.hasFalloutEquivalent() || tileHasWorkToDo(currentTile, unit, localUniqueCache)))
             return currentTile
         
-        val workableTilesCenterFirst = currentTile.getTilesInDistance(4)
+        val workableTilesCenterFirst = currentTile.getTilesInDistance(3)
             .filter {
                 isAutomationWorkableTile(it, tilesToAvoid, currentTile, unit) 
                         && getBasePriority(it, unit) > 1
