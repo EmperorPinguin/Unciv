@@ -228,8 +228,7 @@ object UnitAutomation {
         val lowHealthCities = unit.civ.getKnownCivs() // This is a Sequence
             .flatMap { it.cities.asSequence() }
             .any { unit.civ.isAtWarWith(it.civ) && it.health < it.getMaxHealth() }
-        val bigArmy = unit.civ.units.getCivUnits().count { it.isMilitary() } > 30
-        val biggerArmy = unit.civ.units.getCivUnits().count { it.isMilitary() } > 25 || lowHealthCities
+        val shouldAttack = unit.civ.units.getCivUnits().count { it.isMilitary() } > 25 || lowHealthCities
 
         // Accompany settlers
         if (tryAccompanySettlerOrGreatPerson(unit)) return
@@ -258,7 +257,7 @@ object UnitAutomation {
 
         if (tryTakeBackCapturedCity(unit)) return
         
-        if (biggerArmy) {
+        if (shouldAttack) {
             if (HeadTowardsEnemyCityAutomation.tryHeadTowardsEnemyCity(unit)) return // Focus all units without a specific target on the enemy city closest to one of our cities
         }
 
@@ -276,10 +275,8 @@ object UnitAutomation {
 
         // else, try to go to unreached tiles
         if (tryExplore(unit)) return
-        
-        if (bigArmy) {
-            if (tryFogBust(unit)) return
-        }
+
+        if (tryFogBust(unit)) return
 
         // Idle CS units should wander so they don't obstruct players so much
         if (unit.civ.isCityState)
