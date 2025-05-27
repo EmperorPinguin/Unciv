@@ -296,6 +296,7 @@ class WorkerAutomation(
             //luxuries are more important than other types of resources
         }
         if (unit.civ.cities.isNotEmpty()) priority += tile.aerialDistanceTo(unit.civ.getCapital(true)!!.getCenterTile()) / 20f
+        if (tile.owningCity != null) priority -= tile.aerialDistanceTo(tile.owningCity!!.getCenterTile()) / 20f
     
         if (tile in roadBetweenCitiesAutomation.tilesOfRoadsMap)
             priority += 3
