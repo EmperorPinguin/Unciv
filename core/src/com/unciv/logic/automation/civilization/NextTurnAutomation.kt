@@ -448,7 +448,7 @@ object NextTurnAutomation {
         if (civInfo.isOneCityChallenger()) return
         //if (civInfo.isAtWar()) return // don't train settlers when you could be training troops.
         if (civInfo.cities.none()) return
-        if (civInfo.getHappiness() <= civInfo.cities.size) return
+        if (civInfo.getHappiness() <= -6) return
 
         // This is a tough one - if we don't ignore conditionals we could have units that can found only on certain tiles that are ignored
         // If we DO ignore conditionals we could get a unit that can only found if there's a certain tech, or something
