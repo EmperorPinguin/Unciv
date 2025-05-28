@@ -41,7 +41,7 @@ class BarbarianAutomation(val civInfo: Civilization) {
         if (UnitAutomation.tryUpgradeUnit(unit)) return
 
         // 2 - trying to attack somebody - but don't leave the encampment
-        if (BattleHelper.tryAttackNearbyEnemy(unit, stayOnTile = true)) return
+        if (BattleHelper.barbarianTryAttackNearbyEnemy(unit, stayOnTile = true)) return
 
         // 3 - at least fortifying
         unit.fortifyIfCan()
@@ -57,7 +57,7 @@ class BarbarianAutomation(val civInfo: Civilization) {
         // 3 - trying to attack enemy
         // if a embarked melee unit can land and attack next turn, do not attack from water.
         if (BattleHelper.tryDisembarkUnitToAttackPosition(unit)) return
-        if (!unit.isCivilian() && BattleHelper.tryAttackNearbyEnemy(unit)) return
+        if (!unit.isCivilian() && BattleHelper.barbarianTryAttackNearbyEnemy(unit)) return
 
         // 4 - trying to pillage tile or route
         while (UnitAutomation.tryPillageImprovement(unit)) {
