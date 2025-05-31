@@ -797,35 +797,6 @@
     }
   },
   {
-    "name": "Maria Theresa",
-    "production": 5,
-    "food": 4,
-    "gold": 7,
-    "science": 5,
-    "culture": 5,
-    "happiness": 6,
-    "faith": 5,
-    "military": 4,
-    "aggressive": 5,
-    "declareWar": 5,
-    "commerce": 8,
-    "diplomacy": 5,
-    "loyal": 5,
-    "expansion": 7,
-    "priorities": {
-      "Tradition": 5,
-      "Liberty": 7,
-      "Honor": 4,
-      "Commerce": 8,
-      "Patronage": 7,
-      "Piety": 5,
-      "Rationalism": 5,
-      "Freedom": 6,
-      "Autocracy": 4,
-      "Order": 5
-    }
-  },
-  {
     "name": "Montezuma I",
     "production": 5,
     "food": 5,
