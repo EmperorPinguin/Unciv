@@ -466,11 +466,6 @@ object NextTurnAutomation {
 
         if (civInfo.units.getCivUnits().count { it.isMilitary() } < civInfo.cities.size) return // We need someone to defend them first
 
-        val workersBuildableForThisCiv = civInfo.gameInfo.ruleset.units.values.any {
-            it.hasUnique(UniqueType.BuildImprovements)
-                && it.isBuildable(civInfo)
-        }
-
         val bestCity = civInfo.cities.filterNot { it.isPuppet || it.population.population < 2 }
             .maxByOrNull { it.cityStats.currentCityStats.production }
             ?: return
