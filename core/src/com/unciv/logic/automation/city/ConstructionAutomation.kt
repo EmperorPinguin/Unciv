@@ -233,7 +233,7 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
 
         if (!findTileWorthImproving()) return
 
-        addChoice(relativeCostEffectiveness, buildableWorkboatUnits.minBy { it.cost }.name, 0.6f)
+        addChoice(relativeCostEffectiveness, buildableWorkboatUnits.minBy { it.cost }.name, 10f)
     }
 
     private fun addWorkerChoice() {
