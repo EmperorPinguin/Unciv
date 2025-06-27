@@ -60,14 +60,14 @@ object UseGoldAutomation {
     }
 
     private fun maybeBuyCityTiles(civInfo: Civilization) {
-        if (civInfo.gold <= 0)
+        if (civInfo.gold <= 34) // cheapest possible tile is 34 gold if not America
             return
         // Don't buy tiles in the very early game. It is unlikely that we already have the required
         // tech, the necessary worker and that there is a reasonable threat from another player to
         // grab the tile. We could also check all that, but it would require a lot of cycles each
         // turn and this is probably a good approximation.
-        if (civInfo.gameInfo.turns < (civInfo.gameInfo.speed.scienceCostModifier * 20).toInt())
-            return
+        //if (civInfo.gameInfo.turns < (civInfo.gameInfo.speed.scienceCostModifier * 20).toInt())
+            //return
 
         val highlyDesirableTiles: SortedMap<Tile, MutableSet<City>> = getHighlyDesirableTilesToCityMap(civInfo)
 
@@ -117,15 +117,15 @@ object UseGoldAutomation {
             compareByDescending<Tile?> { it?.naturalWonder != null }
                 .thenByDescending { it?.resource != null && it.tileResource.resourceType == ResourceType.Luxury }
                 .thenByDescending { it?.resource != null && it.tileResource.resourceType == ResourceType.Strategic }
+                .thenByDescending { it?.resource != null && it.tileResource.resourceType == ResourceType.Bonus }
                 // This is necessary, so that the map keeps Tiles with the same resource as two
                 // separate entries.
                 .thenBy { it.hashCode() }
         )
 
         for (city in civInfo.cities.filter { !it.isPuppet && !it.isBeingRazed }) {
-            val highlyDesirableTilesInCity = city.tilesInRange.filter {
-                isHighlyDesirableTile(it, civInfo, city)
-            }
+            val highlyDesirableTilesInCity = city.tilesInRange.filter { it.aerialDistanceTo(city.getCenterTile()) <= 2 } // Further away and they're too expensive
+                .filter { isHighlyDesirableTile(it, civInfo, city) }
             for (highlyDesirableTileInCity in highlyDesirableTilesInCity) {
                 highlyDesirableTiles.getOrPut(highlyDesirableTileInCity) { mutableSetOf() }
                     .add(city)
@@ -138,20 +138,7 @@ object UseGoldAutomation {
         if (!it.isVisible(civInfo)) return false
         if (it.getOwner() != null) return false
         if (it.neighbors.none { neighbor -> neighbor.getCity() == city }) return false
-
-        fun hasNaturalWonder() = it.naturalWonder != null
-
-        fun hasLuxuryCivDoesntOwn() =
-            it.hasViewableResource(civInfo)
-                && it.tileResource.resourceType == ResourceType.Luxury
-                && !civInfo.hasResource(it.resource!!)
-
-        fun hasResourceCivHasNoneOrLittle() =
-            it.hasViewableResource(civInfo)
-                && it.tileResource.resourceType == ResourceType.Strategic
-                && civInfo.getResourceAmount(it.resource!!) <= 3
-
-        return (hasNaturalWonder() || hasLuxuryCivDoesntOwn() || hasResourceCivHasNoneOrLittle())
+        return (it.naturalWonder != null || it.hasViewableResource(civInfo))
     }
 
     private fun tryGainInfluence(civInfo: Civilization, cityState: Civilization) {
