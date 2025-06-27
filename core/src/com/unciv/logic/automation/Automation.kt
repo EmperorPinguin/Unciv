@@ -78,7 +78,6 @@ object Automation {
     fun rankStatsForCityWork(stats: Stats, city: City, areWeRankingSpecialist: Boolean, localUniqueCache: LocalUniqueCache): Float {
         val cityAIFocus = city.getCityFocus()
         val yieldStats = stats.clone()
-        val civPersonality = city.civ.getPersonality()
         val cityStatsObj = city.cityStats
         val civInfo = city.civ
         val allTechsAreResearched = civInfo.tech.allTechsAreResearched()
