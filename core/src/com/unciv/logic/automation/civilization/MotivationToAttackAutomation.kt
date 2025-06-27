@@ -43,7 +43,7 @@ object MotivationToAttackAutomation {
 
         // If our personality is to declare war more then we should have a higher base motivation (a negative number closer to 0)
         modifiers.add(Pair("Base motivation", -(15f * personality.inverseModifierFocus(PersonalityValue.DeclareWar, 0.5f))))
-        modifiers.add(Pair("Test", 100000f))
+        if (civInfo.gameInfo.getAliveMajorCivs().count() <= 2) { modifiers.add(Pair("Duel ZoC", 100000f))}
 
         modifiers.add(Pair("Relative combat strength", getCombatStrengthModifier(civInfo, targetCiv, ourCombatStrength, theirCombatStrength + 0.8f * civInfo.threatManager.getCombinedForceOfWarringCivs())))
         // TODO: For now this will be a very high value because the AI can't handle multiple fronts, this should be changed later though
