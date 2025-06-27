@@ -317,7 +317,8 @@ object UnitAutomation {
 
 
         val unitDistanceToTiles = unit.movement.getDistanceToTiles()
-        val closestCity = unit.civ.cities.minByOrNull { it.getCenterTile().aerialDistanceTo(unit.getTile()) }?.takeIf { it.getCenterTile().aerialDistanceTo(unit.getTile()) < 20 }
+        // Don't move civilian units into capital, we need to launch spaceships to win.
+        val closestCity = unit.civ.cities.filterNot { it.isCapital() }.minByOrNull { it.getCenterTile().aerialDistanceTo(unit.getTile()) }?.takeIf { it.getCenterTile().aerialDistanceTo(unit.getTile()) < 20 }
 
         // Finding the distance to the closest enemy is expensive, so lets sort the tiles using a cheaper function
         val sortedTilesToRetreatTo: Sequence<Tile> = if (closestCity != null) {
