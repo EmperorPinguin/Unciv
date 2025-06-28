@@ -35,7 +35,7 @@ object UnitAutomation {
                 && tile.neighbors.any { !unit.civ.hasExplored(it) }
                 && (!unit.civ.isCityState || tile.neighbors.any { it.getOwner() == unit.civ }) // Don't want city-states exploring far outside their borders
                 && unit.getDamageFromTerrain(tile) <= 0    // Don't take unnecessary damage
-                && unit.civ.threatManager.getDistanceToClosestEnemyUnit(tile, 3) > 3 // don't walk in range of enemy units
+                && unit.civ.threatManager.getDistanceToClosestEnemyUnit(tile, 2) > 2 // don't walk in range of enemy units
                 && unit.movement.canMoveTo(tile) // expensive, evaluate last
                 && unit.movement.canReach(tile) // expensive, evaluate last
     }
@@ -48,6 +48,7 @@ object UnitAutomation {
         if (explorableTilesThisTurn.any()) {
             val bestTile = explorableTilesThisTurn
                 .sortedByDescending { it.tileHeight }  // secondary sort is by 'how far can you see'
+                .sortedByDescending { it.stats.getTileStats(unit.civ).values.sum() }
                 .maxByOrNull { it.aerialDistanceTo(unit.currentTile) }!! // primary sort is by 'how far can you go'
             unit.movement.headTowards(bestTile)
             return true
@@ -88,7 +89,9 @@ object UnitAutomation {
         val reachableTilesThisTurn =
                 unit.movement.getDistanceToTiles().keys.filter { isGoodTileForFogBusting(unit, it) }
         if (reachableTilesThisTurn.any()) {
-            unit.movement.headTowards(reachableTilesThisTurn.random()) // Just pick one
+            unit.movement.headTowards(reachableTilesThisTurn.sortedByDescending { it.tileHeight }  // secondary sort is by 'how far can you see'
+                .sortedByDescending { it.stats.getTileStats(unit.civ).values.sum() }
+                .maxByOrNull { it.aerialDistanceTo(unit.currentTile) }!!) // primary sort is by 'how far can you go') // Just pick one
             return true
         }
 
@@ -104,9 +107,7 @@ object UnitAutomation {
     private fun isGoodTileForFogBusting(unit: MapUnit, tile: Tile): Boolean {
         return unit.movement.canMoveTo(tile)
                 && tile.getOwner() == null
-                && tile.neighbors.all { it.getOwner() == null }
                 && unit.civ.hasExplored(tile)
-                && tile.getTilesInDistance(2).any { it.getOwner() == unit.civ }
                 && unit.getDamageFromTerrain(tile) <= 0
                 && unit.movement.canReach(tile) // expensive, evaluate last
     }
@@ -260,8 +261,6 @@ object UnitAutomation {
         if (shouldAttack) {
             if (HeadTowardsEnemyCityAutomation.tryHeadTowardsEnemyCity(unit)) return // Focus all units without a specific target on the enemy city closest to one of our cities
         }
-
-        if (tryGarrisoningRangedLandUnit(unit)) return
 
         if (tryStationingMeleeNavalUnit(unit)) return
 
@@ -670,34 +669,6 @@ object UnitAutomation {
         return false
     }
 
-    private fun tryGarrisoningRangedLandUnit(unit: MapUnit): Boolean {
-        if (unit.baseUnit.isMelee() || unit.baseUnit.isWaterUnit) return false // don't garrison melee units, they're not that good at it
-        val citiesWithoutGarrison = unit.civ.cities.filter {
-            val centerTile = it.getCenterTile()
-            centerTile.militaryUnit == null
-                    && unit.movement.canMoveTo(centerTile)
-        }
-
-
-        val citiesToTry = if (!unit.civ.isAtWar()) {
-            if (unit.getTile().isCityCenter()) return true // It's always good to have a unit in the city center, so if you haven't found anyone around to attack, forget it.
-            citiesWithoutGarrison.asSequence()
-        } else {
-            if (unit.getTile().isCityCenter() &&
-                    isCityThatNeedsDefendingInWartime(unit.getTile().getCity()!!)) return true
-            val citiesWithoutGarrisonThatNeedDefending = citiesWithoutGarrison.asSequence()
-                    .filter { isCityThatNeedsDefendingInWartime(it) }
-            if (citiesWithoutGarrisonThatNeedDefending.any()) citiesWithoutGarrisonThatNeedDefending
-            else citiesWithoutGarrison.asSequence()
-        }
-
-        val closestReachableCityNeedsDefending = citiesToTry
-            .sortedBy { it.getCenterTile().aerialDistanceTo(unit.currentTile) }
-            .firstOrNull { unit.movement.canReach(it.getCenterTile()) }
-            ?: return false
-        unit.movement.headTowards(closestReachableCityNeedsDefending.getCenterTile())
-        return true
-    }
 
     private fun isCityThatNeedsDefendingInWartime(city: City): Boolean {
         if (city.health < city.getMaxHealth()) return true // this city is under attack!
