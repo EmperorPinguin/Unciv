@@ -117,7 +117,7 @@ object CityLocationTileRanker {
             //Ideally, we shouldn't really count the center tile, as it's converted into 1 production 2 food anyways with special cases treated above, but doing so can lead to AI moving settler back and forth until forever
             for (nearbyTile in newCityTile.getTilesAtDistance(i)) {
                 tiles++
-                tileValue += rankTile(nearbyTile, civ, onCoast, newUniqueLuxuryResources, baseTileMap, uniqueCache) * (3 / (i + 1))
+                tileValue += rankTile(nearbyTile, civ, onCoast, newUniqueLuxuryResources, baseTileMap, uniqueCache) * (4-i) / 2
                 //Tiles close to the city can be worked more quickly, and thus should gain higher weight.
             }
         }
@@ -139,8 +139,8 @@ object CityLocationTileRanker {
                 // and values it higher than when it moves closer to the city
                 distanceToCity == 7 -> 2f
                 distanceToCity == 6 -> 4f
-                distanceToCity == 5 -> 8f // Settling further away sacrifices tempo
-                distanceToCity == 4 -> 6f
+                distanceToCity == 5 -> 6f // Settling further away sacrifices tempo
+                distanceToCity == 4 -> 8f
                 distanceToCity == 3 -> -25f
                 distanceToCity < 3 -> -30f // Even if it is a mod that lets us settle closer, lets still not do it
                 else -> 0f

@@ -90,7 +90,7 @@ object Automation {
             for (unique in localUniqueCache.forCityGetMatchingUniques(city, UniqueType.UnhappinessFromPopulationTypePercentageChange))
                 if (unique.params[1] == "Specialists" && city.matchesFilter(unique.params[2]))
                     yieldStats.happiness -= (unique.params[0].toFloat() / 100f)  // relative val is negative, make positive
-            if (yieldStats.science > 2) yieldStats.science * 1.5f // Work scientists
+            if (yieldStats.science > 2 && yieldStats.science!= 4f) yieldStats.science * 2 // Work scientists
         }
 
         val surplusFood = city.cityStats.currentCityStats[Stat.Food]
