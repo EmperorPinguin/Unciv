@@ -74,6 +74,9 @@ object CivilianUnitAutomation {
         )
             return ReligiousUnitAutomation.enhanceReligion(unit)
 
+        if ((unit.hasUnique(UniqueType.MayFoundReligion) || unit.hasUnique(UniqueType.MayEnhanceReligion)) 
+                && SpecificUnitAutomation.automateImprovementPlacer(unit)) return //use excess prophets for holy sites
+
         // We try to add any unit in the capital we can, though that might not always be desirable
         // For now its a simple option to allow AI to win a science victory again
         if (unit.hasUnique(UniqueType.AddInCapital))

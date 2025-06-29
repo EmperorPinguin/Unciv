@@ -469,7 +469,7 @@ object NextTurnAutomation {
         val bestCity = civInfo.cities.filterNot { it.isPuppet || it.population.population < 2 }
             .maxByOrNull { it.cityStats.currentCityStats.production }
             ?: return
-        if (bestCity.cityConstructions.getBuiltBuildings().count() > 1) // 2 buildings or more, otherwise focus on self first
+        if (bestCity.cityConstructions.getBuiltBuildings().count() > 2) // 3 buildings or more (this includes Palace), otherwise focus on self first
             bestCity.cityConstructions.currentConstructionFromQueue = settlerUnits.minByOrNull { it.cost }!!.name
     }
 
