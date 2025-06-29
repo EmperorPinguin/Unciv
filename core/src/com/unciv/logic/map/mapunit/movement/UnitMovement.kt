@@ -11,6 +11,7 @@ import com.unciv.logic.map.tile.Tile
 import com.unciv.models.UnitActionType
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.UnitMovementMemoryType
+import com.unciv.utils.getOrPut
 import java.util.BitSet
 
 
@@ -21,7 +22,8 @@ class UnitMovement(val unit: MapUnit) {
     class ParentTileAndTotalMovement(val tile: Tile, val parentTile: Tile, val totalMovement: Float)
 
     fun isUnknownTileWeShouldAssumeToBePassable(tile: Tile) = !unit.civ.hasExplored(tile)
-
+    
+    
     /**
      * Gets the tiles the unit could move to at [position] with [unitMovement].
      * Does not consider if tiles can actually be entered, use canMoveTo for that.
@@ -32,7 +34,7 @@ class UnitMovement(val unit: MapUnit) {
         unitMovement: Float,
         considerZoneOfControl: Boolean = true,
         tilesToIgnoreBitset: BitSet? = null,
-        passThroughCache: HashMap<Tile, Boolean> = HashMap(),
+        canPassThroughCache: ArrayList<Boolean?> = ArrayList(),
         movementCostCache: HashMap<Pair<Tile, Tile>, Float> = HashMap(),
         includeOtherEscortUnit: Boolean = true
     ): PathsToTilesWithinTurn {
@@ -60,7 +62,10 @@ class UnitMovement(val unit: MapUnit) {
                     var totalDistanceToTile: Float = when {
                         !neighbor.isExplored(unit.civ) ->
                             distanceToTiles[tileToCheck]!!.totalMovement + 1f  // If we don't know then we just guess it to be 1.
-                        !passThroughCache.getOrPut(neighbor) { canPassThrough(neighbor) } -> unitMovement // Can't go here.
+                        
+                        !canPassThroughCache.getOrPut(neighbor.zeroBasedIndex){
+                            canPassThrough(neighbor)
+                        } -> unitMovement // Can't go here.
                         // The reason that we don't just "return" is so that when calculating how to reach an enemy,
                         // You need to assume his tile is reachable, otherwise all movement algorithms on reaching enemy
                         // cities and units goes kaput.
@@ -136,7 +141,7 @@ class UnitMovement(val unit: MapUnit) {
         val visitedTilesBitset = BitSet().apply { set(currentTile.zeroBasedIndex) }
         val civilization = unit.civ
 
-        val passThroughCache = HashMap<Tile, Boolean>()
+        val passThroughCacheNew = ArrayList<Boolean?>()
         val movementCostCache = HashMap<Pair<Tile, Tile>, Float>()
         val canMoveToCache = HashMap<Tile, Boolean>()
 
@@ -155,7 +160,7 @@ class UnitMovement(val unit: MapUnit) {
 
             for (tileToCheck in tilesByPreference) {
                 val distanceToTilesThisTurn = if (distance == 1) {
-                    getDistanceToTiles(true, passThroughCache, movementCostCache) // check cache
+                    getDistanceToTiles(true, passThroughCacheNew, movementCostCache) // check cache
                 }
                 else {
                     getMovementToTilesAtPosition(
@@ -163,7 +168,7 @@ class UnitMovement(val unit: MapUnit) {
                         unitMaxMovement,
                         false,
                         visitedTilesBitset,
-                        passThroughCache,
+                        passThroughCacheNew,
                         movementCostCache
                     )
                 }
@@ -711,7 +716,7 @@ class UnitMovement(val unit: MapUnit) {
      */
     fun getDistanceToTiles(
         considerZoneOfControl: Boolean = true,
-        passThroughCache: HashMap<Tile, Boolean> = HashMap(),
+        passThroughCacheNew: ArrayList<Boolean?> = ArrayList(),
         movementCostCache: HashMap<Pair<Tile, Tile>, Float> = HashMap(),
         includeOtherEscortUnit: Boolean = true
     ): PathsToTilesWithinTurn {
@@ -724,7 +729,7 @@ class UnitMovement(val unit: MapUnit) {
             unit.currentMovement,
             considerZoneOfControl,
             null,
-            passThroughCache,
+            passThroughCacheNew,
             movementCostCache,
             includeOtherEscortUnit
         )

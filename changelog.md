@@ -1,3 +1,30 @@
+## 4.17.1
+
+CPU performance improvements
+
+Fixed dev console requiring scrolling on small UI settings
+
+By SomeTroglodyte: 
+- Fix console `tile find` for quoted input or filters, requiring correct uppercase 
+- Fix mod checker not offering to auto-update Uniques for extension mods 
+- Speed and Difficulty uniques treated as part of GlobalUniques
+
+Make Machu Picchu and Neuschwanstein need a non-Natural Wonder mountain - By SpacedOutChicken
+
+Fix display for mod names with dashes in them - By RobLoach
+
+## 4.17.0
+
+AI considers tile damage when deciding on which tile to heal on
+
+Fixed building maintenance unique
+
+By SomeTroglodyte:
+- Improve ModChecker UI 
+- Allow mods with no global uniques, no ruins or no difficulties file
+
+AI: better handling of improvement-buildings - By EmperorPinguin
+
 ## 4.16.19
 
 AI performance optimization
