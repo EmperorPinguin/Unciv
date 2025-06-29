@@ -9,6 +9,7 @@ import com.unciv.logic.city.CityConstructions
 import com.unciv.logic.civilization.CityAction
 import com.unciv.logic.civilization.NotificationCategory
 import com.unciv.logic.civilization.NotificationIcon
+import com.unciv.logic.civilization.managers.ReligionState
 import com.unciv.logic.map.BFS
 import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.logic.map.tile.Tile
@@ -359,6 +360,10 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         if (city.cityStats.currentCityStats.culture < 2) {
             buildingStats.culture *= 2 // We need to start growing borders
         }
+        
+        if (civInfo.religionManager.remainingFoundableReligions() != 0)
+            buildingStats.faith *= 2 * if (civInfo.religionManager.religionState < ReligionState.Pantheon) 3 else 1
+        
 
         /*for (stat in Stat.entries) {
 

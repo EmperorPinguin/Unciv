@@ -4,6 +4,7 @@ import com.unciv.Constants
 import com.unciv.logic.automation.Automation
 import com.unciv.logic.automation.ThreatLevel
 import com.unciv.logic.city.City
+import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.civilization.diplomacy.DiplomacyFlags
 import com.unciv.logic.civilization.diplomacy.RelationshipLevel
 import com.unciv.logic.map.mapunit.MapUnit
@@ -26,15 +27,20 @@ object ReligiousUnitAutomation {
             if (diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) == true){
                 // See NextTurnAutomation - these are the conditions under which AI agrees to religious demands
                 // If they still hold, keep the agreement, otherwise we can renege
-                if (diplomacyManager.relationshipLevel() == RelationshipLevel.Ally) return false
-                if (Automation.threatAssessment(unit.civ, city.civ) >= ThreatLevel.High) return false
+                if (diplomacyManager.relationshipLevel() >= RelationshipLevel.Competitor) return false
             }
             return true
         }
 
         /** Lowest value will be chosen */
-        fun rankCityForReligionSpread(city: City): Int {
+        fun rankCityForReligionSpread(city: City, civInfo: Civilization): Int {
             var rank = city.getCenterTile().aerialDistanceTo(unit.getTile())
+            
+            if (city.civ.isMajorCiv()) {
+                rank += 10 // Prefer city states, little point wasting faith spreading to another major civ
+            }
+            else if (city.civ.questManager.getAssignedQuestsFor(civInfo.civName).any { it.questName == "Spread Religion"} )
+                rank -= 10 // Spread to city states with a quest for it
             
             val diplomacyManager = unit.civ.getDiplomacyManager(city.civ)
             if (diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) == true){
@@ -52,7 +58,7 @@ object ReligiousUnitAutomation {
                 .filter { it.civ.knows(unit.civ) && !it.civ.isAtWarWith(unit.civ) }
                 .filterNot { it.religion.isProtectedByInquisitor(unit.religion) }
                 .filter { isValidSpreadReligionTarget(it) }
-                .minByOrNull { rankCityForReligionSpread(it) }
+                .minByOrNull { rankCityForReligionSpread(it, unit.civ) }
 
         if (city == null) return
         val destination = city.getTiles()
