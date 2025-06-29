@@ -310,7 +310,6 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
     private fun applyVictoryBuildingValue(building: Building): Float {
         var value = 0f
         if (!cityIsOverAverageProduction) return value
-        if (building.isWonder) value += 2f
         if (building.hasUnique(UniqueType.TriggersCulturalVictory)
             || building.hasUnique(UniqueType.TriggersVictory)) value += 20f // if we're this close to actually winning, we don't care what your preferred victory type is
         if (building.hasUnique(UniqueType.EnablesConstructionOfSpaceshipParts)) value += 10f //* personality.modifierFocus(PersonalityValue.Science, .3f)
@@ -361,8 +360,8 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
             buildingStats.culture *= 2 // We need to start growing borders
         }
         
-        if (civInfo.religionManager.remainingFoundableReligions() != 0)
-            buildingStats.faith *= 2 * if (civInfo.religionManager.religionState < ReligionState.Pantheon) 3 else 1
+        //if (civInfo.religionManager.remainingFoundableReligions() != 0)
+        //    buildingStats.faith *= 2 * if (civInfo.religionManager.religionState < ReligionState.Pantheon) 3 else 1
         
 
         /*for (stat in Stat.entries) {

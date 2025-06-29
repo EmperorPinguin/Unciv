@@ -197,7 +197,7 @@ object ReligionAutomation {
         var rank = 0.0f
         rank += stats.happiness * 1.2f
         rank += stats.food * 1.1f
-        rank += stats.production * 1f //basis
+        rank += stats.production * 1.3f //basis
         rank += stats.faith * 0.9f //high value, as it is reinvested securing more beliefs
         rank += stats.culture * 0.8f
         rank += stats.science * 0.7f
@@ -258,7 +258,7 @@ object ReligionAutomation {
             // Multiply by 2 if enough pop/followers (best implemented with conditionals, so left open for now)
             // If obsoleted, continue
             score += modifier * when (unique.type) {
-                UniqueType.GrowthPercentBonus -> unique.params[0].toFloat() / 5f
+                UniqueType.GrowthPercentBonus -> unique.params[0].toFloat() / 3f
                 UniqueType.BorderGrowthPercentage -> -unique.params[0].toFloat() / 15f
                 UniqueType.StrengthForCities -> unique.params[0].toFloat() / 30f // Modified by personality
                 UniqueType.CityHealingUnits -> unique.params[1].toFloat() / 30f
@@ -286,13 +286,13 @@ object ReligionAutomation {
                     }
                 UniqueType.StatsFromTradeRoute ->
                     religionStatsWeights(unique.stats) *
-                        if (city.isConnectedToCapital()) 1f
-                        else 0.5f //no yields from the belief yet, also for pantheons it's quite low-tempo
+                        if (city.isConnectedToCapital()) 2f
+                        else 1f //no yields from the belief yet, also for pantheons it's quite low-tempo
                 UniqueType.StatPercentFromReligionFollowers ->
-                    min(unique.params[0].toFloat() * city.population.population, unique.params[2].toFloat()) / 3
+                    min(unique.params[0].toFloat() * city.population.population, unique.params[2].toFloat()) / 2
                 UniqueType.StatsPerCity ->
                     if (city.matchesFilter(unique.params[1]))
-                        religionStatsWeights(unique.stats) * 1f //free yields
+                        religionStatsWeights(unique.stats) * 4f //free yields
                     else 0f
                 else -> 0f
             }
