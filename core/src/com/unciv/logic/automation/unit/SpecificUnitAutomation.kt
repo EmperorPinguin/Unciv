@@ -232,7 +232,7 @@ object SpecificUnitAutomation {
                 it.isLand && it.resource == null && !it.isCityCenter()
                         && (unit.currentTile == it || unit.movement.canMoveTo(it))
                         && it.improvement == null
-                        && it.improvementFunctions.canBuildImprovement(improvement, unit.cache.state)
+                        && it.improvementFunctions.canBuildImprovement(improvement, unit.civ)
                         && Automation.rankTile(it, unit.civ, localUniqueCache) > averageTerrainStatsValue
             }
 
@@ -364,8 +364,10 @@ object SpecificUnitAutomation {
         val capitalTile = unit.civ.getCapital()!!.getCenterTile()
         if (unit.movement.canReach(capitalTile))
             unit.movement.headTowards(capitalTile)
-        if (unit.movement.canUnitSwapTo(capitalTile))
+        if (unit.movement.canUnitSwapTo(capitalTile)) {
+            unit.movement.headTowards(capitalTile) // we need to move through the intermediate tiles
             unit.movement.swapMoveToTile(capitalTile)
+        }
         if (unit.getTile() == capitalTile) {
             UnitActions.invokeUnitAction(unit, UnitActionType.AddInCapital)
         }
