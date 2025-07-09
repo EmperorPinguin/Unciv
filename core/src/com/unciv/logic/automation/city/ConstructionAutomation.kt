@@ -121,7 +121,8 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         }
 
         val chosenConstruction: String =
-            if (relativeCostEffectiveness.isEmpty()) { // choose one of the special constructions instead
+            if (relativeCostEffectiveness.isEmpty() || relativeCostEffectiveness.none { it.choiceModifier > 0.1f }) { // choose one of the special constructions instead
+                // also, don't build useless stuff. By disabling this, it's easier to spot when a building is valued incorrectly
                 // add science!
                 when {
                     PerpetualConstruction.science.isBuildable(cityConstructions) && !allTechsAreResearched -> PerpetualConstruction.science.name
@@ -302,7 +303,12 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
                 else -> 0f
             }
         } else { 
-            value += if (building.hasUnique(UniqueType.CreatesOneImprovement)) 5f else 0f //District-type buildings, should be weighed by the stats (incl. adjacencies) of the improvement
+            value += when {
+                building.hasUnique(UniqueType.CreatesOneImprovement) -> 5f //District-type buildings, should be weighed by the stats (incl. adjacencies) of the improvement
+                building.hasUnique(UniqueType.ProvidesResources) -> 3f
+                building.hasUnique(UniqueType.GreatPersonPointPercentage) -> 2f
+                else -> 0f
+            }
         }
         return value
     }
