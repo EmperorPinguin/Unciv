@@ -11,6 +11,7 @@ import com.unciv.logic.map.tile.Tile
 import com.unciv.models.UnitActionType
 import com.unciv.models.ruleset.Building
 import com.unciv.models.ruleset.tile.TerrainType
+import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.LocalUniqueCache
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.stats.Stat
@@ -232,7 +233,7 @@ object SpecificUnitAutomation {
                 it.isLand && it.resource == null && !it.isCityCenter()
                         && (unit.currentTile == it || unit.movement.canMoveTo(it))
                         && it.improvement == null
-                        && it.improvementFunctions.canBuildImprovement(improvement, unit.civ)
+                        && it.improvementFunctions.canBuildImprovement(improvement, GameContext(unit.civ))
                         && Automation.rankTile(it, unit.civ, localUniqueCache) > averageTerrainStatsValue
             }
 
