@@ -10,7 +10,7 @@ import com.unciv.models.ruleset.Belief
 import com.unciv.models.ruleset.BeliefType
 import com.unciv.models.ruleset.Building
 import com.unciv.models.ruleset.Victory
-import com.unciv.models.ruleset.unique.StateForConditionals
+import com.unciv.models.ruleset.unique.GameContext
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.ruleset.unit.BaseUnit
 import com.unciv.models.stats.Stat
@@ -225,7 +225,7 @@ object ReligionAutomation {
         if (belief.type == BeliefType.Pantheon)
             score *= 0.9f
         
-        score *= belief.getWeightForAiDecision(StateForConditionals(civInfo))
+        score *= belief.getWeightForAiDecision(GameContext(civInfo))
 
         return score
     }
@@ -475,7 +475,7 @@ object ReligionAutomation {
                 (it.type == beliefType || beliefType == BeliefType.Any)
                     && !additionalBeliefsToExclude.contains(it)
                     && civInfo.religionManager.getReligionWithBelief(it) == null
-                    && it.getMatchingUniques(UniqueType.OnlyAvailable, StateForConditionals.IgnoreConditionals)
+                    && it.getMatchingUniques(UniqueType.OnlyAvailable, GameContext.IgnoreConditionals)
                     .none { unique -> !unique.conditionalsApply(civInfo.state) }
             }
             .maxByOrNull { rateBelief(civInfo, it) }
