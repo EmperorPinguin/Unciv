@@ -1,3 +1,11 @@
+## 4.17.11
+
+Fix Ancient Ruin benefit on higher difficulties - By RobLoach
+
+Multiplayer: Only bring forth `AuthPopup` if server explicitly returns `401` - By touhidurrr 
+
+Modding: "can settle" unique able accept tile filters for water and impassible tiles - By Emandac
+
 ## 4.17.10
 
 Fix crash when opening victory screen on the first turn
