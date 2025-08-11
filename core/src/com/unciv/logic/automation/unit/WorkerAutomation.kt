@@ -91,7 +91,7 @@ class WorkerAutomation(
         }
 
         if (currentTile.improvementInProgress != null) return // we're working!
-        
+
         if (tileToWork == currentTile && tileHasWorkToDo(currentTile, unit, localUniqueCache))
             return startWorkOnCurrentTile(unit)
 
