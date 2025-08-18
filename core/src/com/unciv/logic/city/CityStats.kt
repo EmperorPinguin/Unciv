@@ -97,7 +97,7 @@ class CityStats(val city: City) {
     //endregion
     //region Pure Functions
 
-
+    @Readonly
     private fun getStatsFromTradeRoute(): Stats {
         val stats = Stats()
         val capitalForTradeRoutePurposes = city.civ.getCapital()!!
@@ -174,8 +174,7 @@ class CityStats(val city: City) {
     @Readonly
     fun hasExtraAnnexUnhappiness(): Boolean {
         if (city.civ.civName == city.foundingCiv || city.isPuppet) return false
-        return !city.containsBuildingUnique(UniqueType.RemoveAnnexUnhappiness)
-                && !city.containsBuildingUnique(UniqueType.RemovesAnnexUnhappiness)
+        return !city.containsBuildingUnique(UniqueType.RemovesAnnexUnhappiness)
     }
 
     @Readonly
@@ -202,14 +201,14 @@ class CityStats(val city: City) {
     }
 
 
-    @Readonly @Suppress("purity") // stats[] *= fails
+    @Readonly
     private fun getStatsFromUniquesBySource(): StatTreeNode {
         val sourceToStats = StatTreeNode()
 
         val cityStateStatsMultipliers = city.civ.getMatchingUniques(UniqueType.BonusStatsFromCityStates).toList()
 
         fun addUniqueStats(unique: Unique) {
-            val stats = unique.stats.clone()
+            @LocalState val stats = unique.stats.clone()
             if (unique.sourceObjectType==UniqueTarget.CityState)
                 for (multiplierUnique in cityStateStatsMultipliers)
                     stats[Stat.valueOf(multiplierUnique.params[1])] *= multiplierUnique.params[0].toPercent()
