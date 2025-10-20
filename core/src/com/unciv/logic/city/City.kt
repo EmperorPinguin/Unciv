@@ -175,7 +175,8 @@ class City : IsPartOfGameInfoSerialization, INamed {
 
     @Readonly fun isCapital(): Boolean = cityConstructions.builtBuildingUniqueMap.hasUnique(UniqueType.IndicatesCapital, state)
     @Readonly fun isCoastal(): Boolean = centerTile.isCoastalTile()
-
+    @Readonly fun isNaval(): Boolean = centerTile.isWater || isCoastal()
+    
     @Readonly fun getBombardRange(): Int = civ.gameInfo.ruleset.modOptions.constants.baseCityBombardRange
     @Readonly fun getWorkRange(): Int = civ.gameInfo.ruleset.modOptions.constants.cityWorkRange
     @Readonly fun getExpandRange(): Int = civ.gameInfo.ruleset.modOptions.constants.cityExpandRange
@@ -273,7 +274,10 @@ class City : IsPartOfGameInfoSerialization, INamed {
     @Readonly fun getStrength() = cityConstructions.getBuiltBuildings().sumOf { it.cityStrength }.toFloat()
 
     /** Gets max air units that can remain in the city untransported */
-    @Readonly fun getMaxAirUnits() = civ.gameInfo.ruleset.modOptions.constants.cityAirUnitCapacity
+    @Readonly fun getMaxAirUnits(): Int = civ.gameInfo.ruleset.modOptions.constants.cityAirUnitCapacity +
+        getMatchingUniques(UniqueType.CarryExtraAirUnits)
+            .filter { it.params[1] == "Air" }
+            .sumOf { it.params[0].toInt() }
 
     override fun toString() = name // for debug
 

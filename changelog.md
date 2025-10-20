@@ -1,3 +1,64 @@
+## 4.18.7
+
+Improve Civilopedia display of GlobalUniques - By SomeTroglodyte
+
+Naval Tradition Policy under Commerce as per Civ V - By JhandeFlores
+
+By RobLoach:
+- Fix Ancient Ruins when there are conditionals 
+- Add Leader Titles unique 
+
+Modding/Feature: Allow units to destroy cities instead of capturing - By PhiRite
+
+## 4.18.6
+
+Game startup performance improvements
+
+Mod preview performance improvements
+
+Avoid rare crash concurrent modification when calculating construction costs
+
+By RobLoach:
+- Modding: Ancient Ruins can have unit-related conditionals 
+- AbsoluteUnits: Add Great Admiral by Basil 
+
+Allow naval units to be spawn in water city - By Emandac
+
+## 4.18.5
+
+AI will not attack cities with no health with siege units
+
+AI will not attack capturable cities with melee units that cannot capture them
+
+Mod checker: conditional tags are accepted as "filtering uniques"
+
+By RobLoach:
+- Add Countable: `Adopted [policy] Policies by [civ] Civilizations` 
+- Allow Buildings to increase Air Unit Capacity 
+- Add Victory Type-specific music 
+
+Disable automatic counter-denunciation for human players - By unciv-loof
+
+By Ambeco - error handling works in edge cases 
+
+## 4.18.4
+
+Unique validation: 
+- Find possible misspellings for incorrect modifier parameters
+- Better "acceptable modifier for" validation
+
+By touhidurrr:
+- Ignore temporary errors when fetching mods list 
+
+Memory perf improvements - By Ambeco (new contributor!)
+
+By unciv-loof:
+- Temperature shift slider now updates map preview 
+
+By RobLoach:
+- Great Admiral: GPP only accumulate for Water units 
+- hexarealm: Add Great Admiral sprite, by The Bucketeer
+
 ## 4.18.3
 
 Buildings can now include "[relativeAmount]% weight to this choice for AI decisions"

@@ -16,11 +16,11 @@ import com.unciv.logic.UncivShowableException
 import com.unciv.logic.github.Github
 import com.unciv.logic.github.Github.repoNameToFolderName
 import com.unciv.logic.github.GithubAPI
+import com.unciv.logic.github.GithubAPI.downloadAndExtract
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.RulesetCache
 import com.unciv.models.tilesets.TileSetCache
 import com.unciv.models.translations.tr
-import com.unciv.ui.components.widgets.UncivTextField
 import com.unciv.ui.components.extensions.addSeparator
 import com.unciv.ui.components.extensions.disable
 import com.unciv.ui.components.extensions.enable
@@ -36,6 +36,7 @@ import com.unciv.ui.components.input.onClick
 import com.unciv.ui.components.widgets.AutoScrollPane
 import com.unciv.ui.components.widgets.ExpanderTab
 import com.unciv.ui.components.widgets.LoadingImage
+import com.unciv.ui.components.widgets.UncivTextField
 import com.unciv.ui.components.widgets.WrappableLabel
 import com.unciv.ui.images.ImageGetter
 import com.unciv.ui.popups.ConfirmPopup
@@ -280,9 +281,9 @@ class ModManagementScreen private constructor(
      */
     private fun tryDownloadPage(pageNum: Int) {
         runningSearchJob = Concurrency.run("GitHubSearch") {
-            val repoSearch: GithubAPI.RepoSearch
+            val repoSearch: GithubAPI.RepoSearch?
             try {
-                repoSearch = Github.tryGetGithubReposWithTopic(amountPerPage, pageNum)!!
+                repoSearch = Github.tryGetGithubReposWithTopic(pageNum, amountPerPage)
             } catch (ex: Exception) {
                 Log.error("Could not download mod list", ex)
                 launchOnGLThread {
@@ -297,7 +298,7 @@ class ModManagementScreen private constructor(
                 return@run
             }
 
-            if (!isActive) {
+            if (!isActive || repoSearch == null) {
                 return@run
             }
 
@@ -491,12 +492,12 @@ class ModManagementScreen private constructor(
     private fun downloadMod(repo: GithubAPI.Repo, updateProgressPercent: ((Int)->Unit)? = null, postAction: () -> Unit = {}) {
         Concurrency.run("DownloadMod") { // to avoid ANRs - we've learnt our lesson from previous download-related actions
             try {
-                val modFolder = Github.downloadAndExtract(
-                    repo,
-                    UncivGame.Current.files.getModsFolder(),
-                    updateProgressPercent
-                )
-                    ?: throw Exception("Exception during GitHub download")    // downloadAndExtract returns null for 404 errors and the like -> display something!
+                val modFolder =
+                    repo.downloadAndExtract(
+                        UncivGame.Current.files.getModsFolder(),
+                        updateProgressPercent
+                    )
+                        ?: throw Exception("Exception during GitHub download")    // downloadAndExtract returns null for 404 errors and the like -> display something!
                 Github.rewriteModOptions(repo, modFolder)
                 launchOnGLThread {
                     val repoName = modFolder.name()  // repo.name still has the replaced "-"'s
