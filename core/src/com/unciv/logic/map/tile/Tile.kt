@@ -19,6 +19,7 @@ import com.unciv.logic.map.mapgenerator.MapResourceSetting
 import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.logic.map.mapunit.UnitTurnManager
 import com.unciv.logic.map.mapunit.movement.UnitMovement
+import com.unciv.logic.map.toHexCoord
 import com.unciv.models.ruleset.Ruleset
 import com.unciv.models.ruleset.tile.ResourceType
 import com.unciv.models.ruleset.tile.Terrain
@@ -177,9 +178,9 @@ class Tile : IsPartOfGameInfoSerialization, Json.Serializable {
     /** Between -1.0 and 1.0 - For map generation use only */
     var temperature: Double? = null
 
-    val latitude: Float
+    val latitude: Int
         get() = HexMath.getLatitude(position)
-    val longitude: Float
+    val longitude: Int
         get() = HexMath.getLongitude(position)
 
     @Transient
@@ -587,10 +588,10 @@ class Tile : IsPartOfGameInfoSerialization, Json.Serializable {
             resource != null && civInfo.tech.isRevealed(tileResource)
 
 
-    @Readonly fun getViewableTilesList(distance: Int): List<Tile> = tileMap.getViewableTiles(position, distance)
-    @Readonly fun getTilesInDistance(distance: Int): Sequence<Tile> = tileMap.getTilesInDistance(position, distance)
-    @Readonly fun getTilesInDistanceRange(range: IntRange): Sequence<Tile> = tileMap.getTilesInDistanceRange(position, range)
-    @Readonly fun getTilesAtDistance(distance: Int): Sequence<Tile> = tileMap.getTilesAtDistance(position, distance)
+    @Readonly fun getViewableTilesList(distance: Int): List<Tile> = tileMap.getViewableTiles(position.toHexCoord(), distance)
+    @Readonly fun getTilesInDistance(distance: Int): Sequence<Tile> = tileMap.getTilesInDistance(position.toHexCoord(), distance)
+    @Readonly fun getTilesInDistanceRange(range: IntRange): Sequence<Tile> = tileMap.getTilesInDistanceRange(position.toHexCoord(), range)
+    @Readonly fun getTilesAtDistance(distance: Int): Sequence<Tile> = tileMap.getTilesAtDistance(position.toHexCoord(), distance)
 
     @Readonly
     fun getDefensiveBonus(includeImprovementBonus: Boolean = true, unit: MapUnit? = null): Float {
@@ -616,19 +617,22 @@ class Tile : IsPartOfGameInfoSerialization, Json.Serializable {
      */
     @Readonly
     fun aerialDistanceTo(otherTile: Tile): Int {
-        val xDelta = position.x - otherTile.position.x
-        val yDelta = position.y - otherTile.position.y
+        val positionHexcoord = position.toHexCoord()
+        val otherPositionHexcoord = otherTile.position.toHexCoord()
+        
+        val xDelta = positionHexcoord.x - otherPositionHexcoord.x
+        val yDelta = positionHexcoord.y - otherPositionHexcoord.y
         val distance = maxOf(abs(xDelta), abs(yDelta), abs(xDelta - yDelta))
 
-        var wrappedDistance = Float.MAX_VALUE
+        var wrappedDistance = Int.MAX_VALUE
         if (tileMap.mapParameters.worldWrap) {
-            val otherTileUnwrappedPos = tileMap.getUnWrappedPosition(otherTile.position)
-            val xDeltaWrapped = position.x - otherTileUnwrappedPos.x
-            val yDeltaWrapped = position.y - otherTileUnwrappedPos.y
+            val otherTileUnwrappedPos = tileMap.getUnwrappedPosition(otherPositionHexcoord)
+            val xDeltaWrapped = positionHexcoord.x - otherTileUnwrappedPos.x
+            val yDeltaWrapped = positionHexcoord.y - otherTileUnwrappedPos.y
             wrappedDistance = maxOf(abs(xDeltaWrapped), abs(yDeltaWrapped), abs(xDeltaWrapped - yDeltaWrapped))
         }
 
-        return min(distance, wrappedDistance).toInt()
+        return min(distance, wrappedDistance)
     }
 
     @Readonly
