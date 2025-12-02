@@ -500,8 +500,8 @@ object UnitAutomation {
             .filterNot { unit.baseUnit.isRanged() && it.tileToAttack.isCityCenter() && it.tileToAttack.getCity()!!.health == 1 } // occurs fairly often probably because AI dumb
             .filter { unit.getDamageFromTerrain(it.tileToAttackFrom) <= 0 }  // Don't attack from a mountain or near enemy citadels
             .filter {
-                // Ignore units that would 1-shot you if you attacked
-                BattleDamage.calculateDamageToAttacker(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) < unit.health }
+            // Ignore units that would 1-shot you if you attacked 
+            BattleDamage.calculateDamageToAttacker(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) < unit.health }
             .minByOrNull { it.tileToAttack.aerialDistanceTo(unit.getTile()) }
 
         if (closeEnemy != null) {
@@ -608,10 +608,9 @@ object UnitAutomation {
     private fun chooseBombardTarget(city: City): ICombatant? {
         val targets = TargetHelper.getBombardableTiles(city).map { Battle.getMapCombatantOfTile(it)!! }
             .filterNot { it is MapUnitCombatant && it.isCivilian() }
-        // Don't bombard civilians (they're more efficiently captured/killed by military units if they're indeed this close)
+            // Don't bombard civilians (they're more efficiently captured/killed by military units if they're indeed this close)
         if (targets.none()) return null
-        return targets.maxByOrNull { BattleDamage.calculateDamageToDefender(CityCombatant(city), it)
-        }
+        return targets.maxByOrNull { BattleDamage.calculateDamageToDefender(CityCombatant(city), it) }
     }
 
     private fun tryTakeBackCapturedCity(unit: MapUnit): Boolean {
