@@ -3,7 +3,6 @@ package com.unciv.app.desktop
 import com.unciv.Constants
 import com.unciv.Constants.simulationCiv1
 import com.unciv.Constants.simulationCiv2
-import com.unciv.Constants.simulationCiv3
 import com.unciv.UncivGame
 import com.unciv.logic.GameStarter
 import com.unciv.logic.civilization.PlayerType
@@ -52,15 +51,14 @@ internal object ConsoleLauncher {
         //These names need PascalCase if applied in-game for testing (e.g. if (civInfo.civName == "SimulationCiv2"))
         
         val gameParameters = getGameParameters(simulationCiv1, simulationCiv2)
-        //gameParameters.maxTurns = 200
         val mapParameters = getMapParameters()
         val gameSetupInfo = GameSetupInfo(gameParameters, mapParameters)
         val newGame = GameStarter.startNewGame(gameSetupInfo)
-        //newGame.gameParameters.victoryTypes = ArrayList(newGame.ruleset.victories.keys)
+        newGame.gameParameters.victoryTypes = ArrayList(newGame.ruleset.victories.keys)
         UncivGame.Current.gameInfo = newGame
 
 
-        val simulation = Simulation(newGame, 50, 7)
+        val simulation = Simulation(newGame, 500, 7)
         //Unless the effect size is very large, you'll typically need a large number of games to get a statistically significant result
 
         simulation.start()
@@ -71,17 +69,20 @@ internal object ConsoleLauncher {
             mapSize = MapSize.Tiny
             noRuins = true
             noNaturalWonders = true
+            legendaryStart = true
+            strategicBalance = true
             mirroring = MirroringType.aroundCenterTile
+            waterThreshold -= 0.1f // prevents mirrored continent splitting in two
         }
     }
 
     private fun getGameParameters(vararg civilizations: String): GameParameters {
         return GameParameters().apply {
-            victoryTypes = arrayListOf("Domination")
-            difficulty = "Immortal"
+            difficulty = "King"
+            // Prince doens't have the resources to win fast, leading to slow games and few domination victories
             numberOfCityStates = 0
             speed = Speed.DEFAULT
-            noBarbarians = false
+            noBarbarians = true
             players = ArrayList<Player>().apply {
                 civilizations.forEach { add(Player(it)) }
                 add(Player(Constants.spectator, PlayerType.Human))
