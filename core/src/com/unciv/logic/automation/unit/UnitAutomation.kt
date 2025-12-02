@@ -500,7 +500,6 @@ object UnitAutomation {
             .filterNot { unit.baseUnit.isRanged() && it.tileToAttack.isCityCenter() && it.tileToAttack.getCity()!!.health == 1 } // occurs fairly often probably because AI dumb
             .filter { unit.getDamageFromTerrain(it.tileToAttackFrom) <= 0 }  // Don't attack from a mountain or near enemy citadels
             .filter {
-            // Ignore units that would 1-shot you if you attacked 
             BattleDamage.calculateDamageToAttacker(MapUnitCombatant(unit), Battle.getMapCombatantOfTile(it.tileToAttack)!!) < unit.health }
             .minByOrNull { it.tileToAttack.aerialDistanceTo(unit.getTile()) }
 
@@ -650,7 +649,6 @@ object UnitAutomation {
             centerTile.militaryUnit == null
                     && unit.movement.canMoveTo(centerTile)
         }
-
 
         val citiesToTry = if (!unit.civ.isAtWar()) {
             if (unit.getTile().isCityCenter()) return true // It's always good to have a unit in the city center, so if you haven't found anyone around to attack, forget it.

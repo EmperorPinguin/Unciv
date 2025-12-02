@@ -20,15 +20,15 @@ object BattleHelper {
         val distanceToTiles = unit.movement.getDistanceToTiles()
         val attackableEnemies = TargetHelper.getAttackableEnemies(unit, unit.movement.getDistanceToTiles(), stayOnTile=stayOnTile)
             // Only take enemies we can fight without dying or are made to die
-            .filter {
+            .filter { 
                 val defender = Battle.getMapCombatantOfTile(it.tileToAttack)
-                unit.hasUnique(UniqueType.SelfDestructs) || (defender != null &&
-                    (BattleDamage.calculateDamageToAttacker(
-                        MapUnitCombatant(unit),
-                        defender) < unit.health
-                        && unit.getDamageFromTerrain(it.tileToAttackFrom) <= 0))
-                // For mounted units it is fine to attack from these tiles, but with current AI movement logic it is not easy to determine if our unit can meaningfully move away after attacking
-                // Also, AI doesn't build tactical roads
+                unit.hasUnique(UniqueType.SelfDestructs) || (defender != null && 
+                (BattleDamage.calculateDamageToAttacker(
+                    MapUnitCombatant(unit),
+                    defender) < unit.health
+                    && unit.getDamageFromTerrain(it.tileToAttackFrom) <= 0))
+                    // For mounted units it is fine to attack from these tiles, but with current AI movement logic it is not easy to determine if our unit can meaningfully move away after attacking 
+                    // Also, AI doesn't build tactical roads
             }
 
         val enemyTileToAttack = chooseAttackTarget(unit, attackableEnemies)
@@ -51,14 +51,14 @@ object BattleHelper {
         val unitDistanceToTiles = unit.movement.getDistanceToTiles()
 
         val attackableEnemiesNextTurn = TargetHelper.getAttackableEnemies(unit, unitDistanceToTiles)
-            // Only take enemies we can fight without dying
-            .filter {
-                BattleDamage.calculateDamageToAttacker(
-                    MapUnitCombatant(unit),
-                    Battle.getMapCombatantOfTile(it.tileToAttack)!!
-                ) < unit.health
-            }
-            .filter { it.tileToAttackFrom.isLand }
+                // Only take enemies we can fight without dying
+                .filter {
+                    BattleDamage.calculateDamageToAttacker(
+                        MapUnitCombatant(unit),
+                        Battle.getMapCombatantOfTile(it.tileToAttack)!!
+                    ) < unit.health
+                }
+                .filter { it.tileToAttackFrom.isLand }
 
         val enemyTileToAttackNextTurn = chooseAttackTarget(unit, attackableEnemiesNextTurn)
 
@@ -101,15 +101,15 @@ object BattleHelper {
     private fun getCityAttackValue(attacker: MapUnit, city: City): Int {
         val attackerUnit = MapUnitCombatant(attacker)
         val cityUnit = CityCombatant(city)
-
+        
         val canCaptureCity = attacker.baseUnit.isMelee() && !attacker.hasUnique(UniqueType.CannotCaptureCities)
         if (city.health == 1)
             return if (canCaptureCity) 10000 // Capture the city immediately!
             else 0 // No reason to attack, we won't make any difference
-
+        
         if (canCaptureCity && city.health <= BattleDamage.calculateDamageToDefender(attackerUnit, cityUnit).coerceAtLeast(1))
             return 10000
-
+            
 
         if (attacker.baseUnit.isMelee()) {
             val battleDamage = BattleDamage.calculateDamageToAttacker(attackerUnit, cityUnit)
