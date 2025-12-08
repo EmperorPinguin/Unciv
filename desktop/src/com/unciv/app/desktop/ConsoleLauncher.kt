@@ -58,7 +58,7 @@ internal object ConsoleLauncher {
         UncivGame.Current.gameInfo = newGame
 
 
-        val simulation = Simulation(newGame, 500, 7)
+        val simulation = Simulation(newGame, 500, 8)
         //Unless the effect size is very large, you'll typically need a large number of games to get a statistically significant result
 
         simulation.start()
@@ -78,8 +78,7 @@ internal object ConsoleLauncher {
 
     private fun getGameParameters(vararg civilizations: String): GameParameters {
         return GameParameters().apply {
-            difficulty = "King"
-            // Prince doens't have the resources to win fast, leading to slow games and few domination victories
+            difficulty = "King" // Prince got little happiness to expand, leading to slow games and few domination victories
             numberOfCityStates = 0
             speed = Speed.DEFAULT
             noBarbarians = true
