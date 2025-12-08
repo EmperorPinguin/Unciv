@@ -70,9 +70,9 @@ internal object ConsoleLauncher {
             noRuins = true
             noNaturalWonders = true
             legendaryStart = true
-            strategicBalance = true
+            strategicBalance = true // pretty much standard for multiplayer
             mirroring = MirroringType.aroundCenterTile
-            waterThreshold -= 0.1f // prevents mirrored continent splitting in two
+            waterThreshold -= 0.1f // prevents mirrored continent from splitting in two
         }
     }
 
