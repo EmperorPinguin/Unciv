@@ -260,7 +260,7 @@ object ImageGetter {
             return PortraitUnit(construction, size)
         }
         if (PerpetualConstruction.perpetualConstructionsMap.containsKey(construction))
-            return getImage("OtherIcons/Convert$construction").toGroup(size)
+            return getImage("StatIcons/$construction").toGroup(size)
         return getStatIcon(construction).surroundWithCircle(size).surroundWithThinCircle()
     }
 
