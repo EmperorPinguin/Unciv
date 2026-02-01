@@ -6,7 +6,6 @@ import com.unciv.logic.city.CityStats
 import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.map.BFS
 import com.unciv.logic.map.TileMap
-import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.ruleset.Building
 import com.unciv.models.ruleset.INonPerpetualConstruction
@@ -427,8 +426,8 @@ object Automation {
         var rank = rankStatsValue(stats, civInfo)
         if (tile.improvement == null) rank += 0.5f // improvement potential!
         if (tile.isPillaged()) rank += 0.6f
-        if (tile.hasViewableResource(civInfo)) {
-            val resource = tile.tileResource
+        val resource = tile.tileResource
+        if (civInfo.canSeeResource(resource)) {
             if (resource.resourceType != ResourceType.Bonus) rank += 1f // for usage
             if (tile.improvement == null) rank += 1f // improvement potential - resources give lots when improved!
             if (tile.isPillaged()) rank += 1.1f // even better, repair is faster
@@ -452,8 +451,9 @@ object Automation {
         var score = distance * 100
 
         // Resources are good: less points
-        if (tile.hasViewableResource(city.civ)) {
-            if (tile.tileResource.resourceType != ResourceType.Bonus) score -= 105
+        val resource = tile.tileResource
+        if (city.civ.canSeeResource(resource)) {
+            if (resource.resourceType != ResourceType.Bonus) score -= 105
             else if (distance <= city.getWorkRange()) score -= 104
         } else {
             // Water tiles without resources aren't great unless they're Atolls
@@ -472,10 +472,9 @@ object Automation {
 
         for (adjacentTile in tile.neighbors.filter { it.getOwner() == null }) {
             val adjacentDistance = city.getCenterTile().aerialDistanceTo(adjacentTile)
-            if (adjacentTile.hasViewableResource(city.civ) &&
-                (adjacentDistance < city.getWorkRange() ||
-                    adjacentTile.tileResource.resourceType != ResourceType.Bonus
-                )
+            val adjacentResource = adjacentTile.tileResource
+            if (city.civ.canSeeResource(adjacentResource) &&
+                (adjacentDistance < city.getWorkRange() || adjacentResource.resourceType != ResourceType.Bonus)
             ) score -= 1
             if (adjacentTile.naturalWonder != null) {
                 if (adjacentDistance < city.getWorkRange()) adjacentNaturalWonder = true

@@ -60,6 +60,9 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
     fun getDescription(city: City, showAdditionalInfo: Boolean) = BuildingDescriptions.getDescription(this, city, showAdditionalInfo)
     override fun getCivilopediaTextLines(ruleset: Ruleset) = BuildingDescriptions.getCivilopediaTextLines(this, ruleset)
 
+    override fun getSortGroup(ruleset: Ruleset): Int = ruleset.technologies[requiredTech]?.era(ruleset)?.eraNumber ?: 100
+    override fun getSubCategory(ruleset: Ruleset): String? = ruleset.technologies[requiredTech]?.era(ruleset)?.name ?: "Other"
+
     override fun isUnavailableBySettings(gameInfo: GameInfo): Boolean {
         if (super<INonPerpetualConstruction>.isUnavailableBySettings(gameInfo)) return true
         if (!gameInfo.gameParameters.nuclearWeaponsEnabled && hasUnique(UniqueType.EnablesNuclearWeapons)) return true
@@ -414,11 +417,13 @@ class Building : RulesetStatsObject(), INonPerpetualConstruction {
         if (requiredNearbyImprovedResources != null) {
             val containsResourceWithImprovement = cityConstructions.city.getWorkableTiles()
                 .any {
-                    it.resource != null
-                    && requiredNearbyImprovedResources!!.contains(it.resource!!)
-                    && it.getOwner() == civ
-                    && ((it.getUnpillagedImprovement() != null && it.tileResource.isImprovedBy(it.improvement!!)) || it.isCityCenter()
-                       || (it.getUnpillagedTileImprovement()?.isGreatImprovement() == true && it.tileResource.resourceType == ResourceType.Strategic)
+                    val tileResource = it.tileResource
+                    tileResource != null &&
+                        requiredNearbyImprovedResources!!.contains(tileResource.name) &&
+                        it.getOwner() == civ &&
+                        ((it.getUnpillagedImprovement() != null && tileResource.isImprovedBy(it.improvement!!)) ||
+                            it.isCityCenter() ||
+                            (it.getUnpillagedTileImprovement()?.isGreatImprovement() == true && tileResource.resourceType == ResourceType.Strategic)
                     )
                 }
             if (!containsResourceWithImprovement)
