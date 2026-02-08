@@ -128,6 +128,13 @@ Simple unique parameters are explained by mouseover. Complex parameters are expl
 
 	Applicable to: Triggerable
 
+??? example  "Set [stockpile] to [amount]"
+	Example: "Set [Mana] to [3]"
+
+	This unique's effect can be modified with &lt;(modified by game speed)&gt;
+
+	Applicable to: Triggerable
+
 ??? example  "Instantly gain [amount] [stockpile]"
 	Example: "Instantly gain [3] [Mana]"
 
@@ -2567,14 +2574,14 @@ Simple unique parameters are explained by mouseover. Complex parameters are expl
 
 	This unique is automatically hidden from users.
 
-	Applicable to: Terrain
+	Applicable to: Terrain, Resource
 
 ??? example  "Must be on [amount] largest landmasses"
 	Example: "Must be on [3] largest landmasses"
 
 	This unique is automatically hidden from users.
 
-	Applicable to: Terrain
+	Applicable to: Terrain, Resource
 
 ??? example  "Occurs on latitudes from [amount] to [amount] percent of distance equator to pole"
 	Example: "Occurs on latitudes from [3] to [3] percent of distance equator to pole"
@@ -2990,6 +2997,20 @@ Simple unique parameters are explained by mouseover. Complex parameters are expl
 	Example: "Obsolete with [Agriculture]"
 
 	Applicable to: Building, Improvement, Resource
+
+??? example  "Must not be on [amount] largest landmasses"
+	Example: "Must not be on [3] largest landmasses"
+
+	This unique is automatically hidden from users.
+
+	Applicable to: Terrain, Resource
+
+??? example  "Must be on [amount] largest landmasses"
+	Example: "Must be on [3] largest landmasses"
+
+	This unique is automatically hidden from users.
+
+	Applicable to: Terrain, Resource
 
 ??? example  "Doesn't generate naturally"
 	This unique is automatically hidden from users.

@@ -571,10 +571,15 @@ class DiplomacyManager() : IsPartOfGameInfoSerialization {
         flagsCountdown.remove(flag.name)
     }
 
-    fun addModifier(modifier: DiplomaticModifiers, amount: Float) {
+    fun addModifier(modifier: DiplomaticModifiers, amount: Float, limit: Float? = null) {
         val modifierString = modifier.name
         if (!hasModifier(modifier)) setModifier(modifier, 0f)
-        diplomaticModifiers[modifierString] = diplomaticModifiers[modifierString]!! + amount
+        var newValue = diplomaticModifiers[modifierString]!! + amount
+        if (limit != null) {
+            if (limit < 0) newValue = newValue.coerceAtLeast(limit)
+            else newValue = newValue.coerceAtMost(limit)
+        }
+        diplomaticModifiers[modifierString] = newValue
         if (diplomaticModifiers[modifierString] == 0f) diplomaticModifiers.remove(modifierString)
     }
 
@@ -606,9 +611,9 @@ class DiplomacyManager() : IsPartOfGameInfoSerialization {
         for (thirdCiv in getCommonKnownCivsWithSpectators()) {
             thirdCiv.addNotification("[${civInfo.civName}] and [${otherCiv.civName}] have signed a Declaration of Friendship!",
                 NotificationCategory.Diplomacy, civInfo.civName, NotificationIcon.Diplomacy, otherCiv.civName)
+            if (thirdCiv.isSpectator()) continue
             thirdCiv.getDiplomacyManager(civInfo)!!.setFriendshipBasedModifier()
-            if (thirdCiv.isSpectator()) return
-            thirdCiv.getDiplomacyManager(civInfo)!!.setFriendshipBasedModifier()
+            thirdCiv.getDiplomacyManager(otherCiv)!!.setFriendshipBasedModifier()
         }
 
         // Ignore contitionals as triggerUnique will check again, and that would break
