@@ -169,6 +169,10 @@ class Tile : IsPartOfGameInfoSerialization {
     /** Between -1.0 and 1.0 - For map generation use only */
     var temperature: Double? = null
 
+    @Transient
+        /** For map generation use only */
+    var hasVegetation: Boolean = false
+
     val latitude: Int
         get() = HexMath.getLatitude(position)
     val longitude: Int
@@ -244,7 +248,13 @@ class Tile : IsPartOfGameInfoSerialization {
 
     //region pure functions
 
-    @Readonly fun isHill() = baseTerrain == Constants.hill || terrainFeatures.contains(Constants.hill)
+    @Readonly fun getHillTerrain(): Terrain? {
+        val base = getBaseTerrain()
+        if (base.isHill)
+            return base
+        return terrainFeatureObjects.firstOrNull {it.isHill }
+    }
+    @Readonly fun isHill() = getHillTerrain() != null
 
     /** Returns military, civilian and air units in tile */
     @Readonly
@@ -387,7 +397,7 @@ class Tile : IsPartOfGameInfoSerialization {
         return civInfo.isAtWarWith(tileOwner)
     }
 
-    @Readonly fun isRoughTerrain() = allTerrains.any { it.isRough() }
+    @Readonly fun isRoughTerrain() = allTerrains.any { it.isRough }
 
     @Transient
     internal var stateThisTile: GameContext = GameContext.EmptyState
@@ -546,7 +556,7 @@ class Tile : IsPartOfGameInfoSerialization {
             "resource" -> return observingCiv != null && observingCiv.canSeeResource(tileResource)
             "Water resource" -> return isWater && observingCiv != null && observingCiv.canSeeResource(tileResource)
             "Featureless" -> return terrainFeatures.isEmpty()
-            "Open terrain" -> return allTerrains.all { !it.isRough() } // special case - if *one* terrain is open, we don't care, we need *all*
+            "Open terrain" -> return allTerrains.all { !it.isRough } // special case - if *one* terrain is open, we don't care, we need *all*
             Constants.freshWaterFilter ->
                 return isAdjacentTo(Constants.freshWater, observingCiv)
         }
@@ -728,7 +738,17 @@ class Tile : IsPartOfGameInfoSerialization {
             getUnpillagedRoad() == RoadStatus.Railroad
         else
             roadStatus == RoadStatus.Railroad
-
+    
+    @Readonly
+    fun getConnectionStatus(civInfo: Civilization): RoadStatus {
+        val roadType = getUnpillagedRoad()
+        if (roadType != RoadStatus.None)
+            return roadType
+        if (forestOrJungleAreRoads(civInfo))
+            return RoadStatus.Road
+        return RoadStatus.None
+    }
+    
     @Readonly
     private fun forestOrJungleAreRoads(civInfo: Civilization) =
             civInfo.nation.forestsAndJunglesAreRoads
