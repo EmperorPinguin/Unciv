@@ -1,3 +1,68 @@
+## 4.20.1
+
+Drastically reduced memory consumption
+
+Barbarian encampments removed when tile enters civ territory
+
+Peace/war declarations on a third civ not considered trade "gifts"
+
+Fixed rare crash in cities when purchasing
+
+Buildings with "Moves to new capital when capital changes" not destroyed on city capture
+
+Desktop executables: Max JVM RAM *actually* increased to 4GB  
+
+Notifications shown in UI in order
+
+By unciv-loof:
+- Denouncement popups with moddable messages and audio 
+- turn 0 Autosave 
+
+## 4.20.0
+
+By unciv-loof:
+- Fix embassy trade logic bug 
+- Popup after other civ responds to a demand 
+
+By SeventhM:
+- Add conditionals for current unit movement 
+- Fix unavailable unique being ignored in unexpected places 
+
+Theoretical improvements to workerAutomation performance - By Ambeco
+
+Fixed translation in multiplayer game preview description - By evanofficial (new contributor!)
+
+'Upon signing a peace treaty' unique - By PLynx01
+
+## 4.19.19
+
+Reset tileset settings when deleting the mod that contained the tileset
+
+AIs ignore demands/declarations of friendship from dead civs
+
+By Ambeco:
+- AStar pathing no longer treats rivers as multi-turn obstacles 
+- flat earth hexigonal no longer crashes 
+
+Bugfix: don't try to buy missionaries in cities with a civilian unit - By EmperorPinguin
+
+## 4.19.18
+
+Ignore free promotions for promotion path costs
+
+Allow gaining free promotions before gaining XP
+
+By Ambeco:
+- Mods can have multiple Ocean and Coast Terrains 
+- AStar moves through same tiles as Classic  
+
+Add showDemographics option - By ICanSeeForever
+
+Forced unit disbandment considers refundability and promotions - By unciv-loof
+DenounceWillingness personality trait - by unciv-loof
+
+AI: only get mad at spreading religion while they can found their own - By EmperorPinguin
+
 ## 4.19.17
 
 Ruleset switching in new game screen no longer allows zero victory types
