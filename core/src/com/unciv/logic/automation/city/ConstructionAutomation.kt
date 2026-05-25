@@ -179,7 +179,7 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
             modifier = 5f // there's a settler just sitting here, doing nothing - BAD
 
         if (!civInfo.isAIOrAutoPlaying()) modifier /= 2 // Players prefer to make their own unit choices usually
-        modifier *= personality.modifierFocus(PersonalityValue.Military, .3f)
+        //modifier *= personality.modifierFocus(PersonalityValue.Military, .3f)
         addChoice(relativeCostEffectiveness, militaryUnit, modifier)
     }
 
@@ -313,7 +313,7 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         if (!cityIsOverAverageProduction) return value
         if (building.hasUnique(UniqueType.TriggersCulturalVictory)
             || building.hasUnique(UniqueType.TriggersVictory)) value += 20f // if we're this close to actually winning, we don't care what your preferred victory type is
-        if (building.hasUnique(UniqueType.EnablesConstructionOfSpaceshipParts)) value += 10f * personality.modifierFocus(PersonalityValue.Science, .3f)
+        if (building.hasUnique(UniqueType.EnablesConstructionOfSpaceshipParts)) value += 10f //* personality.modifierFocus(PersonalityValue.Science, .3f)
         return value
     }
 
@@ -326,18 +326,18 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
                     .mapNotNull { NextTurnAutomation.getForeignCityNearCapital(it.getCapital(), civInfo) }
                     .any { it.city == city })
             warModifier *= 2f
-        value += warModifier * building.cityHealth.toFloat() / city.getMaxHealth() * personality.inverseModifierFocus(PersonalityValue.Aggressive, .3f)
-        value += warModifier * building.cityStrength.toFloat() / (city.getStrength() + 3) * personality.inverseModifierFocus(PersonalityValue.Aggressive, .3f) // The + 3 here is to reduce the priority of building walls immedietly
+        value += warModifier * building.cityHealth.toFloat() / city.getMaxHealth() //* personality.inverseModifierFocus(PersonalityValue.Aggressive, .3f)
+        value += warModifier * building.cityStrength.toFloat() / (city.getStrength() + 3) //* personality.inverseModifierFocus(PersonalityValue.Aggressive, .3f) // The + 3 here is to reduce the priority of building walls immedietly
 
         for (experienceUnique in building.getMatchingUniques(UniqueType.UnitStartingExperience, cityState)) {
             var modifier = experienceUnique.params[1].toFloat() / 5
             modifier *= if (cityIsOverAverageProduction) 1f else 0.2f // You shouldn't be cranking out units anytime soon
-            modifier *= personality.modifierFocus(PersonalityValue.Military, 0.3f)
-            modifier *= personality.modifierFocus(PersonalityValue.Aggressive, 0.2f).coerceAtLeast(1f) // Defensive civs can still want a good military
+            //modifier *= personality.modifierFocus(PersonalityValue.Military, 0.3f)
+            //modifier *= personality.modifierFocus(PersonalityValue.Aggressive, 0.2f).coerceAtLeast(1f) // Defensive civs can still want a good military
             value += modifier
         }
         if (building.hasUnique(UniqueType.EnablesNuclearWeapons) && !civInfo.hasUnique(UniqueType.EnablesNuclearWeapons))
-            value += 10f * personality.modifierFocus(PersonalityValue.Military, 0.3f)
+            value += 10f //* personality.modifierFocus(PersonalityValue.Military, 0.3f)
         return value
     }
 
@@ -357,10 +357,14 @@ class ConstructionAutomation(val cityConstructions: CityConstructions) {
         if (city.cityStats.currentCityStats.culture < 2) {
             buildingStats.culture *= 2 // We need to start growing borders
         }
-
-        for (stat in Stat.entries) {
-            buildingStats[stat] *= personality.scaledFocus(PersonalityValue[stat])
+        
+        if (civInfo.stats.statsForNextTurn.faith < 1) {
+            buildingStats.faith *= 3 // We need to found a pantheon
         }
+
+        //for (stat in Stat.entries) {
+        //    buildingStats[stat] *= personality.scaledFocus(PersonalityValue[stat])
+        //}
 
         return Automation.rankStatsValue(buildingStats.clone(), civInfo)
     }

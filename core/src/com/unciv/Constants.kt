@@ -105,6 +105,7 @@ object Constants {
 
     const val simulationCiv1 = "SimulationCiv1"
     const val simulationCiv2 = "SimulationCiv2"
+    const val simulationCiv3 = "SimulationCiv3"
 
     const val dropboxMultiplayerServer = "Dropbox"
     const val uncivXyzServer = "https://uncivserver.xyz"

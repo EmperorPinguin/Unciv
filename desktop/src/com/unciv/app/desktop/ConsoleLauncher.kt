@@ -3,11 +3,13 @@ package com.unciv.app.desktop
 import com.unciv.Constants
 import com.unciv.Constants.simulationCiv1
 import com.unciv.Constants.simulationCiv2
+import com.unciv.Constants.simulationCiv3
 import com.unciv.UncivGame
 import com.unciv.logic.GameStarter
 import com.unciv.logic.civilization.PlayerType
 import com.unciv.logic.map.MapParameters
 import com.unciv.logic.map.MapSize
+import com.unciv.logic.map.MapType
 import com.unciv.logic.map.MirroringType
 import com.unciv.logic.simulation.Simulation
 import com.unciv.models.metadata.*
@@ -61,7 +63,7 @@ internal object ConsoleLauncher {
         UncivGame.Current.gameInfo = newGame
 
 
-        val simulation = Simulation(newGame, 500, 8)
+        val simulation = Simulation(newGame, 500, 1)
         //Unless the effect size is very large, you'll typically need a large number of games to get a statistically significant result
 
         simulation.start()
@@ -69,6 +71,7 @@ internal object ConsoleLauncher {
 
     private fun getMapParameters(): MapParameters {
         return MapParameters().apply {
+            //type = MapType.innerSea
             mapSize = MapSize.Tiny
             noRuins = true
             noNaturalWonders = true
@@ -85,6 +88,7 @@ internal object ConsoleLauncher {
             numberOfCityStates = 0
             speed = Speed.DEFAULT
             noBarbarians = true
+            maxTurns = 100
             players = ArrayList<Player>().apply {
                 for (it in civilizations) {
                     add(Player(it))

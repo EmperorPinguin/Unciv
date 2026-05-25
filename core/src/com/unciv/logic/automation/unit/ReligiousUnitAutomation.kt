@@ -3,6 +3,7 @@ package com.unciv.logic.automation.unit
 import com.unciv.Constants
 import com.unciv.logic.automation.Automation
 import com.unciv.logic.automation.ThreatLevel
+import com.unciv.logic.automation.civilization.ReligionAutomation
 import com.unciv.logic.city.City
 import com.unciv.logic.civilization.diplomacy.DiplomacyFlags
 import com.unciv.logic.civilization.diplomacy.RelationshipLevel
@@ -15,7 +16,7 @@ import yairm210.purity.annotations.Readonly
 object ReligiousUnitAutomation {
 
     fun automateMissionary(unit: MapUnit) {
-        if (unit.religion != unit.civ.religionManager.religion?.name || unit.religion == null)
+        if (unit.religion != unit.civ.religionManager.religion?.name || unit.religion == null) // captured by barbarians, mostly
             return unit.disband()
 
         val ourCitiesWithoutReligion = unit.civ.cities.filter {
@@ -25,13 +26,9 @@ object ReligiousUnitAutomation {
         @Readonly
         fun isValidSpreadReligionTarget(city: City): Boolean {
             val diplomacyManager = unit.civ.getDiplomacyManager(city.civ)
-            if (diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) == true){
-                // See NextTurnAutomation - these are the conditions under which AI agrees to religious demands
-                // If they still hold, keep the agreement, otherwise we can renege
-                if (diplomacyManager.relationshipLevel() == RelationshipLevel.Ally) return false
-                if (Automation.threatAssessment(unit.civ, city.civ) >= ThreatLevel.High) return false
-            }
-            return true
+            return diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) != true
+            // See NextTurnAutomation - these are the conditions under which AI agrees to religious demands
+            // If they still hold, keep the agreement, otherwise we can renege
         }
 
         /** Lowest value will be chosen */
@@ -39,11 +36,14 @@ object ReligiousUnitAutomation {
         fun rankCityForReligionSpread(city: City): Int {
             var rank = city.getCenterTile().aerialDistanceTo(unit.getTile())
             
+            
             val diplomacyManager = unit.civ.getDiplomacyManager(city.civ)
-            if (diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) == true){
+            if (diplomacyManager?.hasFlag(DiplomacyFlags.AgreedToNotSpreadReligion) == true) {
                 rank += 10 // Greatly discourage, but if the other options are too far away we'll take it anyway
             }
-                
+            if (ReligionAutomation.getDesiredReligion(city.civ) == unit.civ.religionManager.religion) {
+                rank -= 10 // spread to atheist civs who want our religion before spreading to civs who already got their own
+            }            
             return rank
         }
         
@@ -80,8 +80,7 @@ object ReligiousUnitAutomation {
         val holyCity = unit.civ.religionManager.getHolyCity()
         val cityToConvert = determineBestInquisitorCityToConvert(unit) // Also returns null if the inquisitor can't convert cities
         val pressureDeficit =
-            if (cityToConvert == null) 0
-            else cityToConvert.religion.getPressureDeficit(civReligion?.name)
+            cityToConvert?.religion?.getPressureDeficit(civReligion?.name) ?: 0
 
         val citiesToProtect = unit.civ.cities.asSequence()
             .filter { it.religion.getMajorityReligion() == civReligion }

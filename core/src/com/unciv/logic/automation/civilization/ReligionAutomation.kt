@@ -6,6 +6,7 @@ import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.civilization.managers.ReligionState
 import com.unciv.logic.map.tile.Tile
 import com.unciv.models.Counter
+import com.unciv.models.Religion
 import com.unciv.models.ruleset.Belief
 import com.unciv.models.ruleset.BeliefType
 import com.unciv.models.ruleset.unique.GameContext
@@ -14,6 +15,7 @@ import com.unciv.models.stats.Stat
 import yairm210.purity.annotations.Readonly
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.random.Random
 
 object ReligionAutomation {
 
@@ -26,51 +28,46 @@ object ReligionAutomation {
         if (civInfo.religionManager.religionState != ReligionState.EnhancedReligion
             && (civInfo.religionManager.remainingFoundableReligions() != 0 || civInfo.religionManager.religionState > ReligionState.Pantheon)
         ) {
-            buyGreatProphetInAnyCity(civInfo)
+            tryBuyGreatProphet(civInfo)
             return
         }
         
-        if (civInfo.religionManager.remainingFoundableReligions() == 0 ) {
-            buyGreatPerson(civInfo)
+        if (civInfo.religionManager.storedFaith >= 100) { // skip check if we likely won't have enough anyways
+            // Priorities decided as in poll: https://discord.com/channels/586194543280390151/618491418859798539/1482723902500241470
+            if (civInfo.religionManager.religionState == ReligionState.EnhancedReligion || civInfo.religionManager.remainingFoundableReligions() == 0) tryBuyMissionary(civInfo) // save up faith for enhancing as needed
             tryBuyAnyReligiousBuilding(civInfo)
-            return
+            tryBuyGreatPerson(civInfo)
         }
-
-        // If we don't have majority in all our own cities, build missionaries and inquisitors to solve this
-        //TODO: in late game, this may not be worth it
-        val citiesWithoutOurReligion = civInfo.cities.filter { it.religion.getMajorityReligion() != civInfo.religionManager.religion!! }
-        // The original had a cap at 4 missionaries total, but 1/4 * the number of cities should be more appropriate imo
-        if (citiesWithoutOurReligion.count() >
-            4 * civInfo.units.getCivUnits().count {
-                    it.hasUnique(UniqueType.CanSpreadReligion)
-                    || it.hasUnique(UniqueType.CanRemoveHeresy) }
-        ) {
-            val (city, pressureDifference) = citiesWithoutOurReligion.map { city ->
-                city to city.religion.getPressureDeficit(civInfo.religionManager.religion?.name)
-            }.maxByOrNull { it.second }!!
-            if (pressureDifference >= Constants.aiPreferInquisitorOverMissionaryPressureDifference)
-                buyInquisitorNear(civInfo, city)
-            buyMissionaryInAnyCity(civInfo)
-            return
-        }
-
-        // Get an inquisitor to defend our holy city
-        val holyCity = civInfo.religionManager.getHolyCity()
-        if (holyCity != null
-            && holyCity in civInfo.cities
-            && civInfo.units.getCivUnits().count { it.hasUnique(UniqueType.PreventSpreadingReligion) } == 0
-            && !holyCity.religion.isProtectedByInquisitor()
-        ) {
-            buyInquisitorNear(civInfo, holyCity)
-            return
-        }
+        return
+    }
         
-        // Just buy missionaries to spread our religion outside of our civ
-        if (civInfo.units.getCivUnits().count { it.hasUnique(UniqueType.CanSpreadReligion) } < 4) {
-            buyMissionaryInAnyCity(civInfo)
+        
+    
+    private fun tryBuyMissionary(civInfo: Civilization) {
+        // Note that in case players complain about AI spreading religion, 
+        // it should be examined if this logic needs to be changed or if the player is wrong (many irrationally cherish their own religion)
+        // Note that religious victory is not part of Civ5 ruleset, for mod support we should eventually adjust behaviour
+        // to prevent a dominant religion from spreading in case this exists as a victory type
+        // It's mostly important our cities aren't atheist; in case of foreign religion we'll still get the follower beliefs
+        // It may be worth converting cities of foreign religion for the founder benefits etc.,
+        // but this needs to be weighed against the faith costs
+        // Buy missionaries one at a time; decent chances are cities convert via natural pressure in time,
+        // and doing it this way reduces risk of unwanted religion spreading
+        
+        if (civInfo.units.getCivUnits().any { it.hasUnique(UniqueType.CanSpreadReligion) }) return
+        val desiredReligion = getDesiredReligion(civInfo) ?: return
+            
+        if (civInfo.cities.any { it.religion.getMajorityReligion()?.isMajorReligion() != true }
+            // Buy missionaries to spread our religion outside of our civ to civs who want our religion
+            //TODO: CS quests
+            || (civInfo.gameInfo.civilizations.any { it.isMajorCiv() && it.isAlive() && civInfo.knows(it)
+                // TODO: do we need to check if the missionary will be able to reach them?
+                && getDesiredReligion(it) == civInfo.religionManager.religion
+                && it.cities.none { city -> city.religion.getMajorityReligion() == getDesiredReligion(it) } })) {
+            buyMissionaryInAnyCity(civInfo, desiredReligion)
             return
         }
-        // Todo: declare war if enemy missionaries enter our civ without permission
+        // Todo: declare war if missionaries enter our civ without permission
     }
 
     private fun tryBuyAnyReligiousBuilding(civInfo: Civilization) {
@@ -89,8 +86,7 @@ object ReligionAutomation {
         }
     }
 
-    private fun buyMissionaryInAnyCity(civInfo: Civilization) {
-        if (civInfo.religionManager.religionState < ReligionState.Religion) return
+    private fun buyMissionaryInAnyCity(civInfo: Civilization, desiredReligion: Religion) {
         var missionaries = civInfo.gameInfo.ruleset.units.values.filter { unit ->
                 unit.hasUnique(UniqueType.CanSpreadReligion)
         }
@@ -109,7 +105,7 @@ object ReligionAutomation {
 
         val validCitiesToBuy = civInfo.cities.filter {
             it.getCenterTile().civilianUnit == null // can't purchase them here
-                && (hasUniqueToTakeCivReligion || it.religion.getMajorityReligion() == civInfo.religionManager.religion)
+                && (hasUniqueToTakeCivReligion || it.religion.getMajorityReligion() == desiredReligion)
                 && (missionaryConstruction.getStatBuyCost(it, Stat.Faith) ?: return@filter false) <= civInfo.religionManager.storedFaith
                 && missionaryConstruction.isPurchasable(it.cityConstructions)
                 && missionaryConstruction.canBePurchasedWithStat(it, Stat.Faith)
@@ -135,7 +131,7 @@ object ReligionAutomation {
         return
     }
 
-    private fun buyGreatProphetInAnyCity(civInfo: Civilization) {
+    private fun tryBuyGreatProphet(civInfo: Civilization) {
         if (civInfo.religionManager.religionState < ReligionState.Religion) return
         var greatProphetUnit = civInfo.religionManager.getGreatProphetEquivalent() ?: return
         greatProphetUnit = civInfo.getEquivalentUnit(greatProphetUnit)
@@ -149,38 +145,7 @@ object ReligionAutomation {
         cityToBuyGreatProphet.cityConstructions.purchaseConstruction(greatProphetUnit, -1, true, Stat.Faith)
     }
 
-    private fun buyInquisitorNear(civInfo: Civilization, city: City) {
-        if (civInfo.religionManager.religionState < ReligionState.Religion) return
-        var inquisitors = civInfo.gameInfo.ruleset.units.values.filter {
-            it.hasUnique(UniqueType.CanRemoveHeresy) || it.hasUnique(UniqueType.PreventSpreadingReligion)
-        }
-
-        inquisitors = inquisitors.map { civInfo.getEquivalentUnit(it) }
-
-        val inquisitorConstruction = inquisitors
-            // Get list of cities it can be built in
-            .associateBy({unit -> unit}) { unit -> civInfo.cities.filter { unit.isPurchasable(it.cityConstructions) && unit.canBePurchasedWithStat(it, Stat.Faith) } }
-            .filter { it.value.isNotEmpty() }
-            // And from that list determine the cheapest price
-            .minByOrNull { it.value.minOf { city -> it.key.getStatBuyCost(city, Stat.Faith)!!  }}?.key
-            ?: return
-
-
-        val hasUniqueToTakeCivReligion = inquisitorConstruction.hasUnique(UniqueType.TakeReligionOverBirthCity)
-
-        val validCitiesToBuy = civInfo.cities.filter {
-            (hasUniqueToTakeCivReligion || it.religion.getMajorityReligion() == civInfo.religionManager.religion)
-            && (inquisitorConstruction.getStatBuyCost(it, Stat.Faith) ?: return@filter false) <= civInfo.religionManager.storedFaith
-            && inquisitorConstruction.isPurchasable(it.cityConstructions)
-            && inquisitorConstruction.canBePurchasedWithStat(it, Stat.Faith)
-        }
-        val cityToBuy = validCitiesToBuy
-            .minByOrNull { it.getCenterTile().aerialDistanceTo(city.getCenterTile()) } ?: return
-
-        cityToBuy.cityConstructions.purchaseConstruction(inquisitorConstruction, -1, true, Stat.Faith)
-    }
-
-    private fun buyGreatPerson(civInfo: Civilization) {
+    private fun tryBuyGreatPerson(civInfo: Civilization) {
         val greatPersonUnit = civInfo.gameInfo.ruleset.units.values.filter {
             it.hasUnique(UniqueType.GreatPerson) && !it.hasUnique(UniqueType.MayFoundReligion) //we want to exclude great prophets from the list
         }
@@ -207,32 +172,45 @@ object ReligionAutomation {
 
     // region rate beliefs
     @Readonly
-    fun rateBelief(civInfo: Civilization, belief: Belief): Float {
+    fun getDesiredReligion(civInfo: Civilization): Religion? {
+        val desiredReligion = if (civInfo.religionManager.remainingFoundableReligions() != 0 
+                || civInfo.religionManager.religionState >= ReligionState.Religion) {
+            civInfo.religionManager.religion
+        } else {
+            civInfo.gameInfo.religions.values.maxByOrNull { rateReligion(civInfo, it) }
+        }
+        return desiredReligion
+    }
+    
+    @Readonly
+    private fun rateReligion(civInfo: Civilization, religion: Religion): Float {
+        var rating = 0f
+        for (belief in religion.getAllBeliefsOrdered())
+            rating += rateBelief(civInfo, belief, false)
+        return  rating
+    }
+    
+    @Readonly
+    fun rateBelief(civInfo: Civilization, belief: Belief, countPlayerBeliefs: Boolean = true): Float {
         var score = 0f // Roughly equivalent to the sum of stats gained across all cities
 
         for (city in civInfo.cities) {
             for (tile in city.getCenterTile().getTilesInDistance(city.getWorkRange())) {
-                val tileRng = tile.stateThisTile.stateBasedRandom("ReligionAutomation.rateBelief")
                 val tileScore = beliefBonusForTile(belief, tile, city)
-                
                 score += tileScore * when {
                     city.workedTiles.contains(tile.position) -> 1f // worked
-                    tile.getCity() == city -> 0.7f // workable
-                    else -> 0.5f // unavailable - for now
-                } * (tileRng.nextFloat() * 0.05f + 0.975f)
+                    tile.getCity() == city -> 0.5f // workable, but probably bad or we'd be working it
+                    //tile.isCoastalTile() -> 0.8f // it's 'nicer' to go for less-contested pantheons, and in various rulesets seems to have good synergy
+                    else -> 0.6f // unavailable - for now
+                } 
             }
 
-            val cityRng = city.state.stateBasedRandom("ReligionAutomation.rateBelief")
-            score += beliefBonusForCity(civInfo, belief, city) * (cityRng.nextFloat() * 0.1f + 0.95f)
+            score += beliefBonusForCity(civInfo, belief, city)
         }
 
-        val civRng = civInfo.state.stateBasedRandom("ReligionAutomation.rateBelief")
-        score += beliefBonusForPlayer(civInfo, belief) * (civRng.nextFloat() * 0.3f + 0.85f)
+        if (countPlayerBeliefs) score += beliefBonusForPlayer(civInfo, belief)
 
-        // All of these Random.nextFloat() don't exist in the original, but I've added them to make things a bit more random.
-
-        if (belief.type == BeliefType.Pantheon)
-            score *= 0.9f
+        // there is enough map RNG for tile-based beliefs. Let's add Personality for city- and player-based beliefs instead of RNG
         
         score *= belief.getWeightForAiDecision(GameContext(civInfo))
 
@@ -274,21 +252,19 @@ object ReligionAutomation {
         var score = 0f
         val ruleSet = civInfo.gameInfo.ruleset
         for (unique in belief.uniqueObjects) {
-            val modifier = 0.5f.pow(unique.modifiers.size)
-            // Multiply by 3/10 if has an obsoleted era
-            // Multiply by 2 if enough pop/followers (best implemented with conditionals, so left open for now)
-            // If obsoleted, continue
+            val modifier = if (unique.getModifiers(UniqueType.ConditionalNotWar).isEmpty()) 1f else 0f // can be cancelled by just declaring war
+            // todo: rank the other conditionals property (e.g. minimum pop requirement)
             score += modifier * when (unique.type) {
                 UniqueType.GrowthPercentBonus -> unique.params[0].toFloat() / 3f
-                UniqueType.BorderGrowthPercentage -> -unique.params[0].toFloat() / 10f
-                UniqueType.StrengthForCities -> unique.params[0].toFloat() / 10f // Modified by personality
-                UniqueType.CityHealingUnits -> unique.params[1].toFloat() / 10f
-                UniqueType.PercentProductionBuildings -> unique.params[0].toFloat() / 3f
-                UniqueType.PercentProductionWonders -> unique.params[0].toFloat() / 3f
-                UniqueType.PercentProductionUnits -> unique.params[0].toFloat() / 3f
+                UniqueType.BorderGrowthPercentage -> -unique.params[0].toFloat() / 15f
+                UniqueType.StrengthForCities -> unique.params[0].toFloat() / 20f // Modified by personality
+                UniqueType.CityHealingUnits -> unique.params[1].toFloat() / 60f // AI doesn't relly know how to use this
+                UniqueType.PercentProductionBuildings -> unique.params[0].toFloat() / 5f
+                UniqueType.PercentProductionWonders -> unique.params[0].toFloat() / 15f
+                UniqueType.PercentProductionUnits -> unique.params[0].toFloat() / 5f
                 UniqueType.StatsFromCitiesOnSpecificTiles ->
                     if (city.getCenterTile().matchesFilter(unique.params[1]))
-                        unique.stats.sum() // Modified by personality
+                        unique.stats.sum()// Modified by personality
                     else 0f
                 UniqueType.StatsFromObject ->
                     when {
@@ -300,8 +276,8 @@ object ReligionAutomation {
                         }
                         ruleSet.specialists.containsKey(unique.params[1]) -> {
                             unique.stats.sum() *
-                                if (city.population.population > 8f) 2f
-                                else 1f
+                                if (city.population.population > 8f) 1.5f // choose this if we're pretty late already, otherwise there are probably faster benefits
+                                else 0f
                         }
                         else -> unique.stats.sum() * 0f //yields from world wonders and great improvements - the latter needs additional AI logic to be used correctly
                     }
@@ -313,7 +289,7 @@ object ReligionAutomation {
                     min(unique.params[0].toFloat() * city.population.population, unique.params[2].toFloat())
                 UniqueType.StatsPerCity ->
                     if (city.matchesFilter(unique.params[1]))
-                        unique.stats.sum() * 1f //free yields
+                        unique.stats.sum() * 2f //free and immediate yields, let's pick it first
                     else 0f
                 else -> 0f
             }
@@ -382,29 +358,31 @@ object ReligionAutomation {
                 UniqueType.BuyUnitsByProductionCost ->
                     0f //Holy Warriors is a waste if we don't buy units with it, and if we buy units with it'll cost us great persons
                 UniqueType.StatsWhenSpreading ->
-                    unique.params[0].toFloat() / 15f
+                    unique.params[0].toFloat() / 40f
                 UniqueType.StatsWhenAdoptingReligion ->
-                    unique.stats.sum() / 50f
+                    unique.stats.sum() / 80f
                 UniqueType.RestingPointOfCityStatesFollowingReligionChange ->
-                    unique.params[0].toFloat() / 8f
+                    unique.params[0].toFloat() / 10f
                 UniqueType.StatsFromGlobalCitiesFollowingReligion ->
-                    unique.stats.sum() * 2f //free yields that are potentially more than our own number of cities would allow
+                    unique.stats.sum() //free yields that are potentially more than our own number of cities would allow
                 UniqueType.StatsFromGlobalFollowers ->
-                    10f * (unique.stats.sum() / unique.params[1].toFloat())
+                    if (unique.params[2] == "in non-enemy foreign cities") 0f // don't adopt beliefs we can't afford others to cancel
+                    else if (unique.params[2] == "in foreign cities") 8f * (unique.stats.sum() / unique.params[1].toFloat()) // worse than the next one, although the AI always aims to spread their religion so maybe we should switch it up
+                    else  10f * (unique.stats.sum() / unique.params[1].toFloat()) 
                 UniqueType.Strength ->
-                    unique.params[0].toFloat() * 3f//combat strength from beliefs is very strong
+                    unique.params[0].toFloat() //combat strength from beliefs is very strong
                 UniqueType.ReligionSpreadDistance ->
-                    (10f + unique.params[0].toFloat()) * goodEarlyModifier
+                    unique.params[0].toFloat() * goodEarlyModifier
                 UniqueType.NaturalReligionSpreadStrength ->
-                    unique.params[0].toFloat() * goodEarlyModifier / 10f //We should weigh this according to cityFilter; Religious Texts is way stronger than Religious Unity
+                    if (unique.params[1] == "in City-State cities") 0f else unique.params[0].toFloat() * goodEarlyModifier / 20f
                 UniqueType.SpreadReligionStrength ->
-                    unique.params[0].toFloat() * goodLateModifier / 10f //Cheaper missionaries are generally better than stronger missionaries
+                    unique.params[0].toFloat() * goodLateModifier / 20f //Cheaper missionaries are generally better than stronger missionaries
                 UniqueType.FaithCostOfGreatProphetChange ->
-                    -unique.params[0].toFloat() * goodLateModifier / 10f //It's only about 1 more prophet, due to the increasing costs.
+                    -unique.params[0].toFloat() * goodLateModifier / 25f //It's only about 1 more prophet, due to the increasing costs.
                 UniqueType.BuyBuildingsDiscount, UniqueType.BuyUnitsDiscount ->
-                    -unique.params[2].toFloat() * goodLateModifier / 5f
+                    -unique.params[2].toFloat() * goodLateModifier / 10f
                 UniqueType.BuyItemsDiscount ->
-                    -unique.params[1].toFloat() * goodLateModifier / 5f
+                    -unique.params[1].toFloat() * goodLateModifier / 10f
                 else -> 0f
             }
         }
@@ -438,15 +416,14 @@ object ReligionAutomation {
 
     private fun foundReligion(civInfo: Civilization) {
         if (civInfo.religionManager.religionState != ReligionState.FoundingReligion) return
-        val rng = civInfo.state.stateBasedRandom("ReligionAutomation.foundReligion")
         val usedReligions = civInfo.gameInfo.religions.values.mapTo(mutableSetOf()) { it.name }
         val availableReligions = civInfo.gameInfo.ruleset.religions.filterNot { it in usedReligions }
         val favoredReligion = civInfo.nation.favoredReligion?.takeIf { it in availableReligions }
         val allFavoredReligions = civInfo.gameInfo.civilizations.mapNotNullTo(mutableSetOf()) { it.nation.favoredReligion}
         val nonFavoredReligions = availableReligions.filterNot { it in allFavoredReligions }
         val chosenReligion = favoredReligion
-            ?: nonFavoredReligions.randomOrNull(rng) // allow other civs to found their own favoured religion when possible
-            ?: availableReligions.randomOrNull(rng)
+            ?: nonFavoredReligions.randomOrNull() // allow other civs to found their own favoured religion when possible
+            ?: availableReligions.randomOrNull()
             ?: return // Wait what? How did we pass the checking when using a great prophet but not this?
 
         civInfo.religionManager.foundReligion(chosenReligion, chosenReligion)
@@ -495,8 +472,7 @@ object ReligionAutomation {
                     && !additionalBeliefsToExclude.contains(it)
                     && civInfo.religionManager.getReligionWithBelief(it) == null
                     && it.getMatchingUniques(UniqueType.OnlyAvailable, GameContext.IgnoreConditionals)
-                        .none { unique -> !unique.conditionalsApply(civInfo.state) }
-                    && it.getMatchingUniques(UniqueType.Unavailable, civInfo.state).none()
+                    .none { unique -> !unique.conditionalsApply(civInfo.state) }
             }
             .maxByOrNull { rateBelief(civInfo, it) }
     }
