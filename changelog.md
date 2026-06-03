@@ -1,3 +1,12 @@
+## 4.20.10
+
+By SomeTroglodyte: 
+- Free policy notifications open policy screen 
+- A new triggerable Unique to choose a music track 
+- Better Scenario starts with fewer surprises 
+
+Boreal map type - By unciv-loof
+
 ## 4.20.9
 
 AIs no longer stop creating cities late-game
