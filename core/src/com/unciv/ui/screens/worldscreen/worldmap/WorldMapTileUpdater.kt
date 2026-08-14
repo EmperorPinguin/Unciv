@@ -1,24 +1,24 @@
 package com.unciv.ui.screens.worldscreen.worldmap
 
 import com.badlogic.gdx.graphics.Color
-import com.unciv.Constants
 import com.unciv.UncivGame
 import com.unciv.logic.automation.unit.CityLocationTileRanker
 import com.unciv.logic.battle.AttackableTile
 import com.unciv.logic.battle.TargetHelper
 import com.unciv.logic.city.City
-import com.unciv.logic.civilization.Civilization
 import com.unciv.logic.map.MapPathing
 import com.unciv.logic.map.mapunit.MapUnit
 import com.unciv.models.Spy
 import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.ui.components.extensions.colorFromRGB
+import com.unciv.view.CivView
 
 object WorldMapTileUpdater {
 
-     fun WorldMapHolder.updateTiles(viewingCiv: Civilization) {
+     fun WorldMapHolder.updateTiles(civView: CivView) {
+        val viewingCiv = civView.getCiv()
 
-        if (isMapRevealEnabled(viewingCiv)) {
+        if (isMapRevealEnabled(civView)) {
             // Only needs to be done once - this is so the minimap will also be revealed
             tileGroups.values.forEach {
                 it.tile.setExplored(viewingCiv, true)
@@ -27,7 +27,7 @@ object WorldMapTileUpdater {
 
         // General update of all tiles
         for (tileGroup in tileGroups.values)
-            tileGroup.update(viewingCiv)
+            tileGroup.update(civView)
 
         // Update tiles according to selected unit/city
         val unitTable = worldScreen.bottomUnitTable
@@ -36,7 +36,7 @@ object WorldMapTileUpdater {
                 updateTilesForSelectedSpy(unitTable.selectedSpy!!)
             }
             unitTable.selectedCity != null -> {
-                val city = unitTable.selectedCity!!
+                val city = unitTable.selectedCity!!.getCity()
                 updateBombardableTilesForSelectedCity(city)
                 // We still want to show road paths to the selected city if they are present
                 if (unitTable.selectedUnitIsConnectingRoad) {
@@ -54,7 +54,7 @@ object WorldMapTileUpdater {
         }
 
         // Same as below - randomly, tileGroups doesn't seem to contain the selected tile, and this doesn't seem reproducible
-        tileGroups[selectedTile]?.layerOverlay?.showHighlight(Color.WHITE)
+        tileGroups[selectedTile?.getTile()]?.layerOverlay?.showHighlight(Color.WHITE)
 
         zoom(scaleX) // zoom to current scale, to set the size of the city buttons after "next turn"
     }
@@ -125,7 +125,7 @@ object WorldMapTileUpdater {
         val moveTileOverlayColor = if (unit.isPreparingParadrop()) Color.BLUE else Color.WHITE
         val tilesInMoveRange = unit.movement.getReachableTilesInCurrentTurn()
         // Prepare special Nuke blast radius display
-        val nukeBlastRadius = if (unit.isNuclearWeapon() && selectedTile != null && selectedTile != unit.getTile())
+        val nukeBlastRadius = if (unit.isNuclearWeapon() && selectedTile != null && selectedTile!!.getTile() != unit.getTile())
             unit.getNukeBlastRadius() else -1
 
         // Z-Layer: 1
@@ -135,7 +135,7 @@ object WorldMapTileUpdater {
 
             // Air-units have additional highlights
             if (isAirUnit && !unit.isPreparingAirSweep()) {
-                if (nukeBlastRadius >= 0 && tile.aerialDistanceTo(selectedTile!!) <= nukeBlastRadius) {
+                if (nukeBlastRadius >= 0 && tile.aerialDistanceTo(selectedTile!!.getTile()) <= nukeBlastRadius) {
                     // The tile is within the nuke blast radius
                     group.layerMisc.overlayTerrain(Color.FIREBRICK, 0.6f)
                 } else if (tile.aerialDistanceTo(unit.getTile()) <= unit.getRange()) {
@@ -208,7 +208,7 @@ object WorldMapTileUpdater {
 
             val attackableTiles: List<AttackableTile> =
                 if (nukeBlastRadius >= 0)
-                    selectedTile!!.getTilesInDistance(nukeBlastRadius)
+                    selectedTile!!.getTile().getTilesInDistance(nukeBlastRadius)
                         // Should not display invisible submarine units even if the tile is visible.
                         .filter { targetTile -> (targetTile.isVisible(unit.civ) && targetTile.getUnits().any { !it.isInvisible(unit.civ) })
                                 || (targetTile.isCityCenter() && unit.civ.hasExplored(targetTile)) }
@@ -227,7 +227,7 @@ object WorldMapTileUpdater {
                         0.5f
                     else 1f
                 )
-                if (attackableTile.tileToAttack == selectedTile)
+                if (attackableTile.tileToAttack == selectedTile?.getTile())
                     tileGroups[attackableTile.tileToAttackFrom]!!.layerOverlay.showHighlight(Color.SKY, 0.7f)
             }
         }
