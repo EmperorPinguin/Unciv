@@ -1,3 +1,81 @@
+## 4.21.13
+
+Massive Application Not Responding cleanup for Android
+
+Minor CPU performance improvements
+
+Spectator-as-civ sees "units moving to tiles" only for the civ's units
+
+AI sets production focus for wonders and spaceship parts - By ssamt
+
+AStar movement fix - By Ambeco
+
+## 4.21.12
+
+Reduce RAM when saving/loading to/from files
+
+Fix rare crashes when handling events while screens are being changed
+
+Fix crash on Options re-open with force-close, e.g. toggling "Enable out-of-game turn notifications" - By SomeTroglodyte 
+
+AI does not see unexplored tiles for tile value when assessing settler locations - By ssamt 
+
+Clarify distance-based unit cycle option - By mvanhorn
+
+Population in cities countable - By PLynx01
+
+Modding: Downgrade "same name for multiple entries" to "OK", lowest level of warning, since most cases are benign
+
+## 4.21.11
+
+Fixed repair functions for when there is only a pillaged road
+
+Avoid ANRs when opening civilopedia
+
+By SomeTroglodyte:
+- Fix Future Tech not counting for Contest Technologies quest 
+- Fix ImprovementPicker not offering Improvements needing a removal 
+
+Reduce autosave memory spikes - By mvanhorn
+
+AI: Better picking of next unit to construct - By WhoIsJohannes
+
+Crude mod author block list - By unciv-loof
+
+Fixed crash when activating 2 cityscreen arrow buttons at the same time
+
+## 4.21.10
+
+By unciv-loof:
+- Squash notifications when many units can be promoted 
+- Preserve scroll position of civ list in victory screen after updating selection 
+
+Disable legion being able to repair - By O-spin
+
+By SomeTroglodyte:
+- Fix improvement picker hiding researchable improvements and failing to hide others 
+- Try to create and index the save destination *extra* early for cheap Android devices
+
+Use live data for latest turn in charts - By ssamt
+
+## 4.21.9
+
+Fix: Defeated singleplayer players again have full map visibility
+
+Fixed crash ewhen clicking on civ relationships lines
+
+Prevent natural-wonder coast conversion artifacts - By mvanhorn
+
+By ssamt:
+- hide spectator in global politics
+- AI avoid selling spaceship parts for resource
+
+Fix WLTKD demand rewrite mid-celebration - By Fanfblrik
+
+Mention which civ took our CS alliance in notification - By unciv-loof
+
+Puppet city in console - By BobbyCobby
+
 ## 4.21.8
 
 Fixed rivers on water near Rock of Gibraltar

@@ -419,10 +419,11 @@ class Civilization : IsPartOfGameInfoSerialization {
         if (playerType == PlayerType.AI) return true
         if (gameInfo.isSimulation()) return true
         val worldScreen = UncivGame.Current.worldScreen ?: return false
-        return worldScreen.viewingCiv == this && worldScreen.autoPlay.isAutoPlaying()
+        return worldScreen.selectedGameView.civView.getCiv() == this && worldScreen.autoPlay.isAutoPlaying()
     }
 
     @Readonly fun isOneCityChallenger() = playerType == PlayerType.Human && gameInfo.gameParameters.oneCityChallenge
+    /** Always false for AI since currentPlayerCiv is only set for human players */
     @Readonly fun isCurrentPlayer() = gameInfo.currentPlayerCiv == this
     @Readonly fun isMajorCiv() = nation.isMajorCiv
     @Readonly fun isMinorCiv() = nation.isCityState || nation.isBarbarian
@@ -433,6 +434,11 @@ class Civilization : IsPartOfGameInfoSerialization {
 
     @Readonly fun isSpectator() = nation.isSpectator
     @Readonly fun isAlive(): Boolean = !isDefeated()
+
+    /** A human player who lost in singleplayer keeps playing as a de-facto spectator, and should get the same map visibility.
+     *  [GameInfo.turns] > 0 guards against the setup phase, where every civ is briefly "defeated" (zero units) before starting units are placed. */
+    @Readonly fun hasSpectatorVision() = isSpectator()
+        || (isDefeated() && isCurrentPlayer() && !gameInfo.gameParameters.isOnlineMultiplayer && gameInfo.turns > 0)
 
     @delegate:Transient
     val cityStateType: CityStateType by lazy { gameInfo.ruleset.cityStateTypes[nation.cityStateType!!]!! }
@@ -571,11 +577,6 @@ class Civilization : IsPartOfGameInfoSerialization {
         return getCivResourceSupply().firstOrNull { it.resource == resource }?.amount ?: 0
     }
 
-    /** Gets modifiers for ALL resources */
-    @Readonly
-    fun getResourceModifiers(): Map<String, Float> =
-        gameInfo.ruleset.tileResources.values.associate { it.name to getResourceModifier(it) }
-
     /**
      * Returns the resource production modifier as a multiplier.
      *
@@ -603,7 +604,6 @@ class Civilization : IsPartOfGameInfoSerialization {
         getMatchingUniques(uniqueType, gameContext).any()
 
     // Does not return local uniques, only global ones.
-    /** Destined to replace getMatchingUniques, gradually, as we fill the enum */
     @Readonly
     @Deprecated(message = "forEachMatchingUnique is faster. If not viable, then this can still be used",
         replaceWith = ReplaceWith("forEachMatchingUnique"))
@@ -915,8 +915,8 @@ class Civilization : IsPartOfGameInfoSerialization {
     @Readonly fun isLongCountDisplay() = hasLongCountDisplayUnique && isLongCountActive()
 
     @Readonly
-    fun calculateScoreBreakdown(): HashMap<String,Double> {
-        val scoreBreakdown = hashMapOf<String,Double>()
+    fun calculateScoreBreakdown(): HashMap<String, Double> {
+        val scoreBreakdown = hashMapOf<String, Double>()
         // 1276 is the number of tiles in a medium sized map. The original uses 4160 for this,
         // but they have bigger maps
         var mapSizeModifier = 1276 / gameInfo.tileMap.mapParameters.numberOfTiles().toDouble()
@@ -926,13 +926,13 @@ class Civilization : IsPartOfGameInfoSerialization {
         val modConstants= gameInfo.ruleset.modOptions.constants
         scoreBreakdown["Cities"] = cities.size * 10 * mapSizeModifier
         scoreBreakdown["Population"] = cities.sumOf { it.population.population } * modConstants.scoreFromPopulation * mapSizeModifier
-        scoreBreakdown["Tiles"] = cities.sumOf { city -> city.getTiles().filter { !it.isWater}.count() } * 1 * mapSizeModifier
+        scoreBreakdown["Tiles"] = cities.sumOf { city -> city.getTiles().count { !it.isWater } } * 1 * mapSizeModifier
         scoreBreakdown["Wonders"] = modConstants.scoreFromWonders * cities
-            .sumOf { city -> city.cityConstructions.getBuiltBuildings()
-                .filter { it.isWonder }.count()
+            .sumOf { city ->
+                city.cityConstructions.getBuiltBuildings().count { it.isWonder }
             }.toDouble()
-        scoreBreakdown["Technologies"] = tech.getNumberOfTechsResearched() * 4.toDouble()
-        scoreBreakdown["Future Tech"] = tech.repeatingTechsResearched * 10.toDouble()
+        scoreBreakdown["Technologies"] = tech.techsResearched.size * 4.0
+        scoreBreakdown["Future Tech"] = tech.repeatingTechsResearched * 10.0
 
         return scoreBreakdown
     }

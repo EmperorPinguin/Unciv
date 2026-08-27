@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.actions.Actions
 import com.badlogic.gdx.scenes.scene2d.ui.Table
 import com.badlogic.gdx.utils.Align
 import com.unciv.GUI
+import com.unciv.ui.components.InputDisabling
 import com.unciv.ui.components.extensions.center
 import com.unciv.ui.components.extensions.centerX
 import com.unciv.ui.components.input.onClick
@@ -176,9 +177,11 @@ class CityButton(val foreignCityView: ForeignCityView, private val tileGroup: Ti
             // second tap on the button will go to the city screen
             // if this city belongs to you and you are not iterating though the air units
             val cityView = foreignCityView.tryGetCityView()
-            val isIteratingUnits = tileGroup.tileView.getVisibleUnits().none { it.getUnit() == unitTable.selectedUnit }
-            if (cityView != null && isIteratingUnits)
+            val isIteratingUnits = tileGroup.tileView.getVisibleUnits().none { it == unitTable.selectedUnit }
+            if (cityView != null && isIteratingUnits) {
+                InputDisabling.disableInput()
                 GUI.pushScreen(CityScreen(cityView))
+            }
             else if (foreignCityView.isKnownTo(viewingPlayer))
                 foreignCityInfoPopup()
         }
@@ -197,7 +200,7 @@ class CityButton(val foreignCityView: ForeignCityView, private val tileGroup: Ti
         onRightClick(action = ::enterCityOrInfoPopup)
 
         // when deselected, move city button to its original position
-        if (unitTable.selectedCity != foreignCityView.getCity() && unitTable.selectedUnit?.currentTile != foreignCityView.getCenterTile().getTile() && unitTable.selectedSpy == null)
+        if (unitTable.selectedCity != foreignCityView.getCity() && unitTable.selectedUnit?.getTile() != foreignCityView.getCenterTile() && unitTable.selectedSpy == null)
             moveButtonUp()
     }
 

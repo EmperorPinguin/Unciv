@@ -36,7 +36,7 @@ import com.unciv.models.ruleset.unique.UniqueType
 import com.unciv.models.translations.tr
 import com.unciv.ui.audio.MusicMood
 import com.unciv.ui.audio.MusicTrackChooserFlags
-import com.unciv.ui.screens.savescreens.Gzip
+import com.unciv.logic.files.FileConversions
 import com.unciv.ui.screens.worldscreen.status.NextTurnProgress
 import com.unciv.utils.DebugUtils
 import com.unciv.utils.debug
@@ -353,7 +353,7 @@ class GameInfo : IsPartOfGameInfoSerialization, HasGameInfoSerializationVersion 
             .getInstance("SHA-1")
             .digest(json().toJson(this).toByteArray(Charsets.UTF_8))
         checksum = oldChecksum
-        return Gzip.encode(bytes)
+        return FileConversions.encode(bytes)
     }
 
     //endregion
@@ -363,6 +363,16 @@ class GameInfo : IsPartOfGameInfoSerialization, HasGameInfoSerializationVersion 
     @Readonly
     fun isSimulation(): Boolean = turns < DebugUtils.SIMULATE_UNTIL_TURN
             || turns < simulateMaxTurns && simulateUntilWin
+
+    // Records the ranking stats of all major civs
+    private fun recordRankingStats() {
+        for (civ in civilizations) {
+            if (!civ.isMajorCiv() || !civ.isAlive()) continue
+            // Force uses a transient cache that is not invalidated on combat losses during other civs' turns
+            civ.resetMilitaryMightCache()
+            civ.statsHistory.recordRankingStats(civ)
+        }
+    }
 
     /**
      *  Advance a turn, running automation for AI players, stopping for human players
@@ -385,6 +395,7 @@ class GameInfo : IsPartOfGameInfoSerialization, HasGameInfoSerializationVersion 
         fun setNextPlayer() {
             playerIndex = (playerIndex + 1) % civilizations.size
             if (playerIndex == 0) {
+                recordRankingStats()
                 turns++
                 if (DebugUtils.SIMULATE_UNTIL_TURN != 0)
                     debug("Starting simulation of turn %s", turns)

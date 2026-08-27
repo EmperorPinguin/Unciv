@@ -118,7 +118,7 @@ class BattleTable(val worldScreen: WorldScreen) : Table() {
         return if (unitTable.selectedUnit != null
                 && !unitTable.selectedUnit!!.isCivilian()
                 && !unitTable.selectedUnit!!.hasUnique(UniqueType.CannotAttack))  // purely cosmetic - hide battle table
-                    MapUnitCombatant(unitTable.selectedUnit!!)
+                    MapUnitCombatant(unitTable.selectedUnit!!.getUnit())
         else if (unitTable.selectedCity != null)
             CityCombatant(unitTable.selectedCity!!.getCity())
         else null // no attacker
@@ -132,7 +132,7 @@ class BattleTable(val worldScreen: WorldScreen) : Table() {
 
     @Readonly
     private fun tryGetDefenderAtTile(selectedTile: Tile, includeFriendly: Boolean): ICombatant? {
-        val attackerCiv = worldScreen.viewingCiv
+        val attackerCiv = worldScreen.selectedGameView.civView.getCiv()
         val defender: ICombatant? = Battle.getMapCombatantOfTile(selectedTile)
 
         if (defender == null || (!includeFriendly && defender.getCivInfo() == attackerCiv))
@@ -348,7 +348,8 @@ class BattleTable(val worldScreen: WorldScreen) : Table() {
         defender: ICombatant,
         attackableTile: AttackableTile
     ) {
-        val canStillAttack = Battle.movePreparingAttack(attacker, attackableTile)
+        val canStillAttack = attacker !is MapUnitCombatant
+                || Battle.movePreparingAttack(attacker, attackableTile)
         worldScreen.mapHolder.removeUnitActionOverlay() // the overlay was one of attacking
         // There was a direct worldScreen.update() call here, removing its 'private' but not the comment justifying the modifier.
         // My tests (desktop only) show the red-flash animations look just fine without.
@@ -416,7 +417,7 @@ class BattleTable(val worldScreen: WorldScreen) : Table() {
                     Actions.removeActor()
                     )
                 )
-                val targetTileGroup = worldScreen.mapHolder.tileGroups[targetTile]!!
+                val targetTileGroup = worldScreen.mapHolder.tileGroups[worldScreen.selectedGameView.tileMapView.getTile(targetTile)]!!
                 nukeCircle.x = targetTileGroup.x
                 nukeCircle.y = targetTileGroup.y
                 worldScreen.mapHolder.addActorToTileGroupMap(nukeCircle)
